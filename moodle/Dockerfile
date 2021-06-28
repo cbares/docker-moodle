@@ -115,26 +115,29 @@ RUN cd /var/www/html/mod \
     && chown -R www-data:www-data questionnaire \
     && rm questionnaire.zip
 
-COPY ./multipartymeeting/multipartymeeting.zip /var/www/html/mod/
-RUN cd /var/www/html/mod/ \
-    && unzip multipartymeeting.zip \
-    && chown -R www-data:www-data multipartymeeting \
-    && rm multipartymeeting.zip
+#COPY ./multipartymeeting/multipartymeeting.zip /var/www/html/mod/
+#RUN cd /var/www/html/mod/ \
+#    && unzip multipartymeeting.zip \
+#    && chown -R www-data:www-data multipartymeeting \
+#    && rm multipartymeeting.zip
 
 # Install H5P - mod/hvp version 1.6 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
     && curl -L https://moodle.org/plugins/download.php/19174/mod_hvp_moodle36_2019031301.zip  -o mod_hvp.zip \
+    #&& curl -L https://moodle.org/plugins/download.php/19174/mod_hvp_moodle39_2020020500.zip  -o mod_hvp.zip \
     && unzip mod_hvp.zip \
     && chown -R www-data:www-data hvp \
     && rm mod_hvp.zip
 
 # Install VPL - mod/vpl version 1.6 from https://moodle.org/plugins/mod_vpl
-RUN cd /var/www/html/mod \
-    && curl -L https://github.com/jcrodriguez-dis/moodle-mod_vpl/archive/bc98f46fcac852d1d237a5ed700fe4030b385aa9.zip -o mod_vpl.zip \
-    && unzip mod_vpl.zip \
-    && mv moodle-mod_vpl-bc98f46fcac852d1d237a5ed700fe4030b385aa9 vpl \
-    && chown -R www-data:www-data vpl \
-    && rm mod_vpl.zip
+#RUN cd /var/www/html/mod \
+#    #&& curl -L https://github.com/jcrodriguez-dis/moodle-mod_vpl/archive/bc98f46fcac852d1d237a5ed700fe4030b385aa9.zip -o mod_vpl.zip \
+#    && curl -L https://github.com/jcrodriguez-dis/moodle-mod_vpl/archive/V3.3.7.zip -o mod_vpl.zip \
+#    && unzip mod_vpl.zip \
+#    #&& mv moodle-mod_vpl-bc98f46fcac852d1d237a5ed700fe4030b385aa9 vpl \
+#    && mv moodle-mod_vpl-3.3.7 vpl \
+#    && chown -R www-data:www-data vpl \
+#    && rm mod_vpl.zip
 
 # Copy file to auto install H5P libraries
 COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
@@ -199,7 +202,8 @@ RUN cd /var/www/html/repository \
     && chown -R www-data:www-data dspace
 
 # Install logstore_xapi plugin to send learning records to LRS
-RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.2.5/xapi.zip -o /xapi.zip \
+# RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.2.5/xapi.zip -o /xapi.zip \
+RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.6.0/xapi.zip -o /xapi.zip \
     && unzip /xapi.zip -d /var/www/html/admin/tool/log/store/ \
     && rm /xapi.zip \
     && chown -R www-data:www-data /var/www/html/admin/tool/log/store/xapi
@@ -228,6 +232,74 @@ COPY php.ini /etc/php/7.0/apache2/php.ini
 COPY config/ /config
 COPY configure.sh /configure.sh
 RUN chmod a+x /configure.sh
+
+
+# Install texlive & AMC dependencies 
+RUN apt-get update \
+    && apt-get install -y \
+    texlive-xetex \
+    lmodern \
+    texlive-fonts-recommended \
+    poppler-utils \
+    imagemagick \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get install -y \
+    texlive-math-extra \
+    texlive-fonts-extra \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get install -y \
+    texlive-latex-extra
+
+
+# Install Plugin XP (LevelUP!)
+RUN cd /var/www/html/blocks \
+    #&& cp /var/moodledata/block_xp_moodle39_2020043003.zip block_xp.zip \
+    && curl -L https://moodle.org/plugins/download.php/21452/block_xp_moodle39_2020043003.zip -o block_xp.zip \
+    && unzip block_xp.zip \
+    && rm block_xp.zip \
+    && chown -R www-data:www-data xp
+
+
+# Install Plugin emailtest
+RUN cd /var/www/html/local \
+    #&& cp /var/moodledata/local_mailtest_moodle38_2019111700.zip mailtest.zip \
+    && curl -L https://moodle.org/plugins/download.php/20592/local_mailtest_moodle38_2019111700.zip -o mailtest.zip \
+    && unzip mailtest.zip \
+    && rm mailtest.zip \
+    && chown -R www-data:www-data mailtest
+
+
+# Install Plugin BigBlueButtonBN
+RUN cd /var/www/html/mod \
+    #&& cp /var/moodledata/mod_bigbluebuttonbn_moodle39_2019042008.zip bbb.zip \
+    && curl -L https://moodle.org/plugins/download.php/21195/mod_bigbluebuttonbn_moodle39_2019042008.zip -o bbb.zip \
+    && unzip bbb.zip \
+    && rm bbb.zip \
+    && chown -R www-data:www-data bigbluebuttonbn
+
+
+# Install Plugin Scheduler
+RUN cd /var/www/html/mod \
+    #&& cp /var/moodledata/mod_scheduler_moodle37_2018112602.zip sched.zip \
+    && curl -L https://moodle.org/plugins/download.php/19749/mod_scheduler_moodle37_2018112602.zip -o sched.zip \
+    && unzip sched.zip \
+    && rm sched.zip \
+    && chown -R www-data:www-data scheduler
+
+
+# Install Plugin jazzquiz
+RUN cd /var/www/html/mod \
+    #&& cp /var/moodledata/mod_jazzquiz_moodle37_2019073000.zip jazz.zip \
+    && curl -L https://moodle.org/plugins/download.php/20022/mod_jazzquiz_moodle37_2019073000.zip -o jazz.zip \
+    && unzip jazz.zip \
+    && rm jazz.zip \
+    && chown -R www-data:www-data jazzquiz
+
+
 
 EXPOSE 80 443
 

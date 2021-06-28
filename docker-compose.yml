@@ -5,8 +5,9 @@ services:
     env_file:
       - envs/common.env
     volumes:
-      - ./envs:/envs
+      - ./data/envs:/envs
       - ./data/moodle-mysql:/var/lib/mysql
+    #entrypoint: ["sh", "-c", "sleep 2073600"]
   moodle:
     build: moodle
     links:
@@ -17,6 +18,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./envs:/envs
+      - ./data/envs:/envs
       - ./data/letsencrypt:/etc/letsencrypt
       - ./data/moodle-moodledata:/var/moodledata
