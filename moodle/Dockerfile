@@ -63,14 +63,10 @@ RUN apt-get update \
 
 RUN apt-get update \
     && apt-get install -y \
+    texlive-latex-extra \
     texlive-science \
     texlive-fonts-extra \
     && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update \
-    && apt-get install -y \
-    texlive-latex-extra
-VOLUME /var/moodledata
 
 # Install apache2
 COPY ./start.sh /start.sh
@@ -299,7 +295,6 @@ RUN cd /var/www/html/mod \
     && unzip jazz.zip \
     && rm jazz.zip \
     && chown -R www-data:www-data jazzquiz
-
 
 EXPOSE 80 443
 
