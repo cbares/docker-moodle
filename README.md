@@ -12,7 +12,30 @@ install docker-compose: [https://docs.docker.com/compose/install/]
 
 ## Moodle Version 3.9.7
 Plugins:
-* testemail: 1.4.0
+* BigBlueButton: 2.4.2
+* EJSApp: 3.1
+* H5P: 1.22.3
+* JazzQuiz: 1.0.1
+* Knockplop: 1.0.1
+* Questionnaire: 3.9.1
+* Scheduler: 3.7.0
+* Category auto enrol: alpha (?useness?)
+* Remlab manager: 1.2
+* Level up!: 3.11.2
+* Pumukit Personnal Recorder filter: 2017121200 [[disabled]] (useness?) 
+* Select eduOER content: 2018031402
+* PuMuKit PersonalRecorder (Atto): 2018072000
+* Easy enrollement: v1.7.1 [[disabled]]
+* SAML2: 2021062900 [[disabled]]
+* Logqtore xAPI: v4.6.0[[disabled]]
+* DSpace Repository: 1.0.0 [[disabled]]
+* Open Source Physics: 1.3
+* ownCloud: v3.6-r1 [[disabled]]
+* SWORD Upload Repository: 0.9 [[disabled]]
+* Fordson (Theme): v3.9 - release 1.1
+* EmailTest: 1.4.0
+* Statistics module: 2019052802
+
 
 ## Setup
 

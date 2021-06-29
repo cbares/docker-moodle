@@ -98,7 +98,7 @@ RUN cd /var/www \
 COPY ./config-dist.php /var/www/html/config-dist.php
 
 # Plugin theme fordson
-RUN curl -L https://moodle.org/plugins/download.php/18810/theme_fordson_moodle36_2019111001.zip -o /fordson.zip \
+RUN curl -L https://moodle.org/plugins/download.php/21786/theme_fordson_moodle39_2020061800.zip -o /fordson.zip \
     && cp /fordson.zip /var/www/html/theme/ \
     && cd /var/www/html/theme \
     && unzip fordson.zip \
@@ -136,7 +136,7 @@ RUN cd /var/www/html/mod/ \
 
 # Plugin mod_questionnaire
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/19726/mod_questionnaire_moodle37_2018110101.zip -o questionnaire.zip \
+    && curl -L https://moodle.org/plugins/download.php/22949/mod_questionnaire_moodle310_2020062302.zip -o questionnaire.zip \
     && unzip questionnaire.zip \
     && chown -R www-data:www-data questionnaire \
     && rm questionnaire.zip
@@ -150,8 +150,7 @@ RUN cd /var/www/html/mod \
 
 # Install H5P - mod/hvp version 1.6 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/19174/mod_hvp_moodle36_2019031301.zip  -o mod_hvp.zip \
-    #&& curl -L https://moodle.org/plugins/download.php/19174/mod_hvp_moodle39_2020020500.zip  -o mod_hvp.zip \
+    && curl -L  https://moodle.org/plugins/download.php/24438/mod_hvp_moodle311_2021061100.zip -o mod_hvp.zip \
     && unzip mod_hvp.zip \
     && chown -R www-data:www-data hvp \
     && rm mod_hvp.zip
@@ -200,7 +199,7 @@ RUN cd /var/www/html/blocks \
 
 # Install Easy Enrollments - enrol/easy version 1.1 from https://moodle.org/plugins/enrol_easy
 RUN cd /var/www/html/enrol \
-    && curl -L https://moodle.org/plugins/download.php/17781/enrol_easy_moodle36_2018090600.zip -o enrol_easy.zip \
+    && curl -L https://moodle.org/plugins/download.php/23046/enrol_easy_moodle310_2020120700.zip -o enrol_easy.zip \
     && unzip enrol_easy.zip \
     && rm enrol_easy.zip
 
@@ -256,8 +255,7 @@ RUN chmod a+x /configure.sh
 
 # Install Plugin XP (LevelUP!)
 RUN cd /var/www/html/blocks \
-    #&& cp /var/moodledata/block_xp_moodle39_2020043003.zip block_xp.zip \
-    && curl -L https://moodle.org/plugins/download.php/21452/block_xp_moodle39_2020043003.zip -o block_xp.zip \
+    && curl -L https://moodle.org/plugins/download.php/24010/block_xp_moodle311_2021042802.zip -o block_xp.zip \
     && unzip block_xp.zip \
     && rm block_xp.zip \
     && chown -R www-data:www-data xp
@@ -272,8 +270,7 @@ RUN cd /var/www/html/local \
 
 # Install Plugin BigBlueButtonBN
 RUN cd /var/www/html/mod \
-    #&& cp /var/moodledata/mod_bigbluebuttonbn_moodle39_2019042008.zip bbb.zip \
-    && curl -L https://moodle.org/plugins/download.php/21195/mod_bigbluebuttonbn_moodle39_2019042008.zip -o bbb.zip \
+    && curl -L https://moodle.org/plugins/download.php/24391/mod_bigbluebuttonbn_moodle311_2019101009.zip -o bbb.zip \
     && unzip bbb.zip \
     && rm bbb.zip \
     && chown -R www-data:www-data bigbluebuttonbn
@@ -281,8 +278,7 @@ RUN cd /var/www/html/mod \
 
 # Install Plugin Scheduler
 RUN cd /var/www/html/mod \
-    #&& cp /var/moodledata/mod_scheduler_moodle37_2018112602.zip sched.zip \
-    && curl -L https://moodle.org/plugins/download.php/19749/mod_scheduler_moodle37_2018112602.zip -o sched.zip \
+    && curl -L https://moodle.org/plugins/download.php/20738/mod_scheduler_moodle39_2019120200.zip -o sched.zip \
     && unzip sched.zip \
     && rm sched.zip \
     && chown -R www-data:www-data scheduler
@@ -290,8 +286,7 @@ RUN cd /var/www/html/mod \
 
 # Install Plugin jazzquiz
 RUN cd /var/www/html/mod \
-    #&& cp /var/moodledata/mod_jazzquiz_moodle37_2019073000.zip jazz.zip \
-    && curl -L https://moodle.org/plugins/download.php/20022/mod_jazzquiz_moodle37_2019073000.zip -o jazz.zip \
+    && curl -L  https://moodle.org/plugins/download.php/23384/mod_jazzquiz_moodle310_2021020400.zip -o jazz.zip \
     && unzip jazz.zip \
     && rm jazz.zip \
     && chown -R www-data:www-data jazzquiz
