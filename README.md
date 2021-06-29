@@ -3,6 +3,17 @@ docker-moodle
 
 A Dockerfile that installs the latest Moodle, Apache and PHP. This uses the official MySQL images from Docker Hub.
 
+## Pre-setup
+
+install docker: [https://docs.docker.com/engine/install/ubuntu/]
+
+install docker-compose: [https://docs.docker.com/compose/install/]
+
+
+## Moodle Version 3.9.7
+Plugins:
+* testemail: 1.4.0
+
 ## Setup
 
 ```

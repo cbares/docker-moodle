@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl \
@@ -11,45 +11,68 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
     && apt-get install -y \
         software-properties-common \
-        python-software-properties \
     && apt-key adv --keyserver "hkp://keyserver.ubuntu.com:80" --recv 'E5267A6C' \
-    && LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php \
-    && add-apt-repository ppa:certbot/certbot \
+    #&& LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php \
+    #&& add-apt-repository ppa:certbot/certbot \
     && apt-get update \
     && apt-get install -y \
         python-setuptools \
         unzip \
         gettext \
         apache2 \
-        php7.0 \
-        php7.0-gd \
-        libapache2-mod-php7.0 \
+        php7.4 \
+        php-gd \
+        libapache2-mod-php7.4 \
         postfix \
         wget \
-        php7.0-pgsql \
+        php7.4-pgsql \
         vim \
         curl \
-        libcurl3 \
-        libcurl3-dev \
-        php7.0-curl \
-        php7.0-xml \
-        php7.0-xmlrpc \
-        php7.0-intl \
-        php7.0-mysql \
-        php7.0-zip \
-        php7.0-mbstring \
-        php7.0-soap \
-        php7.0-mcrypt \
+        libcurl4 \
+        libcurl4-openssl-dev \
+        php7.4-curl \
+        php7.4-xml \
+        php7.4-xmlrpc \
+        php7.4-intl \
+        php7.4-mysql \
+        php7.4-zip \
+        php7.4-mbstring \
+        php7.4-soap \
+        #php7.0-mcrypt \
         certbot \
-        python-certbot-apache \
+        python3-certbot-apache \
+	supervisor \ 
 	sudo \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/www/html
 
-RUN easy_install supervisor
+COPY crontab /crontab
+RUN apt-get update \
+    && apt-get install -y cron \
+    && crontab -u www-data /crontab
 
+# Install texlive & AMC dependencies 
+RUN apt-get update \
+    && apt-get install -y \
+    texlive-xetex \
+    lmodern \
+    texlive-fonts-recommended \
+    poppler-utils \
+    imagemagick \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get install -y \
+    texlive-science \
+    texlive-fonts-extra \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get install -y \
+    texlive-latex-extra
 VOLUME /var/moodledata
 
+# Install apache2
 COPY ./start.sh /start.sh
 COPY ./foreground.sh /etc/apache2/foreground.sh
 RUN chmod 755 /start.sh /etc/apache2/foreground.sh
@@ -64,30 +87,35 @@ RUN ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/rew
     && ln -s /etc/apache2/mods-available/socache_shmcb.load /etc/apache2/mods-enabled/socache_shmcb.load \
     && ln -s /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-enabled/default-ssl.conf
 
+# Install Cerbot
+RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --domains \$VIRTUAL_HOST" > /certbot-setup.sh \
+    && chmod 755 /certbot-setup.sh
+
+# Install moodle 3.9
 RUN cd /var/www \
-    && curl 'https://git.moodle.org/gw?p=moodle.git;a=snapshot;h=008baea92aa20ee7ff619d37cc6568b076cda00c;sf=tgz' -o moodle-latest.tgz \
-    && tar zxf moodle-latest.tgz \
-    && rm moodle-latest.tgz \
+    && curl -L 'https://github.com/moodle/moodle/archive/refs/tags/v3.9.7.tar.gz' -o moodle-3.9.7.tar.gz \
+    && tar zxf moodle-3.9.7.tar.gz \
+    && rm moodle-3.9.7.tar.gz \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
 COPY ./config-dist.php /var/www/html/config-dist.php
 
-RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --domains \$VIRTUAL_HOST" > /certbot-setup.sh \
-    && chmod 755 /certbot-setup.sh
-
+# Plugin theme fordson
 RUN curl -L https://moodle.org/plugins/download.php/18810/theme_fordson_moodle36_2019111001.zip -o /fordson.zip \
     && cp /fordson.zip /var/www/html/theme/ \
     && cd /var/www/html/theme \
     && unzip fordson.zip \
     && rm fordson.zip
 
+# Plugin moodle-auth-saml2
 RUN cd /var/www/html/auth \
     && wget https://github.com/catalyst/moodle-auth_saml2/archive/2018022600.zip -O auth_saml2.zip \
     && unzip auth_saml2.zip \
     && mv moodle-auth_saml2* saml2 \
     && rm auth_saml2.zip
 
+# plugin Pumukit
 COPY ./pumoodle/pumukit.zip /var/www/html/lib/editor/atto/plugins/pumukit.zip
 RUN cd /var/www/html/lib/editor/atto/plugins/ \
     && unzip pumukit.zip \
@@ -103,18 +131,21 @@ RUN cd /var/www/html/filter/ \
     && unzip filterpr.zip \
     && rm filterpr.zip
 
+# Plugin Knockplop
 COPY ./knockplop/knockplop.zip /var/www/html/mod/
 RUN cd /var/www/html/mod/ \
     && unzip knockplop.zip \
     && chown -R www-data:www-data knockplop \
     && rm knockplop.zip
 
+# Plugin mod_questionnaire
 RUN cd /var/www/html/mod \
     && curl -L https://moodle.org/plugins/download.php/19726/mod_questionnaire_moodle37_2018110101.zip -o questionnaire.zip \
     && unzip questionnaire.zip \
     && chown -R www-data:www-data questionnaire \
     && rm questionnaire.zip
 
+# Plugin MultiPartyMetting
 #COPY ./multipartymeeting/multipartymeeting.zip /var/www/html/mod/
 #RUN cd /var/www/html/mod/ \
 #    && unzip multipartymeeting.zip \
@@ -129,6 +160,12 @@ RUN cd /var/www/html/mod \
     && chown -R www-data:www-data hvp \
     && rm mod_hvp.zip
 
+# Copy file to auto install H5P libraries
+COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
+RUN cd /var/www/html/mod/hvp \
+    && chown www-data:www-data autoinstallhvplibs.php \
+    && chmod 775 autoinstallhvplibs.php
+
 # Install VPL - mod/vpl version 1.6 from https://moodle.org/plugins/mod_vpl
 #RUN cd /var/www/html/mod \
 #    #&& curl -L https://github.com/jcrodriguez-dis/moodle-mod_vpl/archive/bc98f46fcac852d1d237a5ed700fe4030b385aa9.zip -o mod_vpl.zip \
@@ -138,12 +175,6 @@ RUN cd /var/www/html/mod \
 #    && mv moodle-mod_vpl-3.3.7 vpl \
 #    && chown -R www-data:www-data vpl \
 #    && rm mod_vpl.zip
-
-# Copy file to auto install H5P libraries
-COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
-RUN cd /var/www/html/mod/hvp \
-    && chown www-data:www-data autoinstallhvplibs.php \
-    && chmod 775 autoinstallhvplibs.php
 
 # Install EJSapp pack - mod/ejsapp version 3.0 from https://moodle.org/plugins/mod_ejsapp
 RUN cd /var/www/html/mod \
@@ -215,45 +246,17 @@ RUN cd /var/www/html/local \
     && mv moodle_statistics* statistics \
     && rm moodle_stat.zip
 
-COPY crontab /crontab
-RUN crontab -u www-data /crontab
-
 # Install Moosh
 RUN wget https://moodle.org/plugins/download.php/15063/moosh_moodle33_2017101600.zip -O /moosh.zip \
     && unzip /moosh.zip \
     && rm /moosh.zip \
     && wget https://gist.githubusercontent.com/nadavkav/2e016eb5cdf5634f8d9a4ed02ed32ebb/raw/22ebd3615992bebfc9ca979955f92e0b4a7c0113/Moosh_Command_Moodle23_Config_ConfigGet.php -O /moosh/Moosh/Command/Moodle23/Config/ConfigGet.php \
     && chmod a+x /moosh/moosh.php
-
 COPY icons/cernbox_icon.svg /var/www/html/repository/owncloud/pix/icon.svg
-
-COPY php.ini /etc/php/7.0/apache2/php.ini
-
+COPY php.ini /etc/php/7.4/apache2/php.ini
 COPY config/ /config
 COPY configure.sh /configure.sh
 RUN chmod a+x /configure.sh
-
-
-# Install texlive & AMC dependencies 
-RUN apt-get update \
-    && apt-get install -y \
-    texlive-xetex \
-    lmodern \
-    texlive-fonts-recommended \
-    poppler-utils \
-    imagemagick \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update \
-    && apt-get install -y \
-    texlive-math-extra \
-    texlive-fonts-extra \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update \
-    && apt-get install -y \
-    texlive-latex-extra
-
 
 # Install Plugin XP (LevelUP!)
 RUN cd /var/www/html/blocks \
@@ -263,11 +266,9 @@ RUN cd /var/www/html/blocks \
     && rm block_xp.zip \
     && chown -R www-data:www-data xp
 
-
-# Install Plugin emailtest
+# Install Plugin emailtest 1.4.0
 RUN cd /var/www/html/local \
-    #&& cp /var/moodledata/local_mailtest_moodle38_2019111700.zip mailtest.zip \
-    && curl -L https://moodle.org/plugins/download.php/20592/local_mailtest_moodle38_2019111700.zip -o mailtest.zip \
+    && curl -L https://moodle.org/plugins/download.php/22516/local_mailtest_moodle311_2020092000.zip -o mailtest.zip \
     && unzip mailtest.zip \
     && rm mailtest.zip \
     && chown -R www-data:www-data mailtest
@@ -298,7 +299,6 @@ RUN cd /var/www/html/mod \
     && unzip jazz.zip \
     && rm jazz.zip \
     && chown -R www-data:www-data jazzquiz
-
 
 
 EXPOSE 80 443
