@@ -35,6 +35,9 @@ Plugins:
 * Fordson (Theme): v3.9 - release 1.1
 * EmailTest: 1.4.0
 * Statistics module: 2019052802
+* Ad-hoc database queries: 4.0
+* Course size: 3.6
+
 
 
 ## Setup

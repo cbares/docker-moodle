@@ -291,6 +291,20 @@ RUN cd /var/www/html/mod \
     && rm jazz.zip \
     && chown -R www-data:www-data jazzquiz
 
+# Install Plugin CustomSQL
+RUN cd /var/www/html/report \
+    && curl -L  https://moodle.org/plugins/download.php/23125/report_customsql_moodle310_2020121800.zip -o customsql.zip \
+    && unzip customsql.zip \
+    && rm customsql.zip \
+    && chown -R www-data:www-data customsql
+
+# Install Plugin CourseSize
+RUN cd /var/www/html/report \
+    && curl -L https://moodle.org/plugins/download.php/19641/report_coursesize_moodle37_2019052800.zip -o coursesize.zip \
+    && unzip coursesize.zip \
+    && rm coursesize.zip \
+    && chown -R www-data:www-data coursesize
+
 EXPOSE 80 443
 
 CMD ["/bin/bash", "/start.sh"]
