@@ -87,11 +87,11 @@ RUN ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/rew
 RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --domains \$VIRTUAL_HOST" > /certbot-setup.sh \
     && chmod 755 /certbot-setup.sh
 
-# Install moodle 3.9
+# Install moodle 3.11
 RUN cd /var/www \
-    && curl -L 'https://github.com/moodle/moodle/archive/refs/tags/v3.9.7.tar.gz' -o moodle-3.9.7.tar.gz \
-    && tar zxf moodle-3.9.7.tar.gz \
-    && rm moodle-3.9.7.tar.gz \
+    && curl -L 'https://github.com/moodle/moodle/archive/refs/tags/v3.11.0.tar.gz' -o moodle-3.11.0.tar.gz \
+    && tar zxf moodle-3.11.0.tar.gz \
+    && rm moodle-3.11.0.tar.gz \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
