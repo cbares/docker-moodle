@@ -305,6 +305,10 @@ RUN cd /var/www/html/report \
     && rm coursesize.zip \
     && chown -R www-data:www-data coursesize
 
+RUN apt-get update \
+    && apt-get install imagemagick \
+    && sed -i -r 's/="none"( pattern="PS")/="read"\1/' /etc/ImageMagick-6/policy.xml
+
 EXPOSE 80 443
 
 CMD ["/bin/bash", "/start.sh"]
