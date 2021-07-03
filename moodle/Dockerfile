@@ -39,12 +39,17 @@ RUN apt-get update \
         php7.4-mbstring \
         php7.4-soap \
         #php7.0-mcrypt \
+	imagemagick
         certbot \
         python3-certbot-apache \
 	supervisor \ 
 	sudo \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/www/html
+
+RUN  sed -i -r 's/="none"( pattern="PS")/="read"\1/' /etc/ImageMagick-6/policy.xml
+
+
 
 COPY crontab /crontab
 RUN apt-get update \
