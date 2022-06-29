@@ -40,6 +40,14 @@ Plugins:
 
 
 
+## update mysql 5.6 to 5.7
+It's needed to run `mysql_upgrade` inside the container
+```
+docker compose up -d
+docker exec -it docker-moodle-mysql-1 bash
+mysql_upgade -uroot -p$MYSQL_ROOT_PASSWORD
+```
+
 ## Setup
 
 ```
