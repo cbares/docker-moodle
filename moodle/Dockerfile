@@ -38,8 +38,7 @@ RUN apt-get update \
         php7.4-zip \
         php7.4-mbstring \
         php7.4-soap \
-        #php7.0-mcrypt \
-	imagemagick
+	imagemagick \
         certbot \
         python3-certbot-apache \
 	supervisor \ 
@@ -48,8 +47,6 @@ RUN apt-get update \
     && rm -rf /var/www/html
 
 RUN  sed -i -r 's/="none"( pattern="PS")/="read"\1/' /etc/ImageMagick-6/policy.xml
-
-
 
 COPY crontab /crontab
 RUN apt-get update \
@@ -94,9 +91,9 @@ RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --
 
 # Install moodle 3.11
 RUN cd /var/www \
-    && curl -L 'https://github.com/moodle/moodle/archive/refs/tags/v3.11.0.tar.gz' -o moodle-3.11.0.tar.gz \
-    && tar zxf moodle-3.11.0.tar.gz \
-    && rm moodle-3.11.0.tar.gz \
+    && curl -L 'https://download.moodle.org/download.php/direct/stable311/moodle-latest-311.tgz' -o moodle-3.11.7.tar.gz \
+    && tar -zxf moodle-3.11.7.tar.gz \
+    && rm moodle-3.11.7.tar.gz \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
@@ -260,14 +257,16 @@ RUN chmod a+x /configure.sh
 
 # Install Plugin XP (LevelUP!)
 RUN cd /var/www/html/blocks \
-    && curl -L https://moodle.org/plugins/download.php/24010/block_xp_moodle311_2021042802.zip -o block_xp.zip \
+    ## && curl -L https://moodle.org/plugins/download.php/24010/block_xp_moodle311_2021042802.zip -o block_xp.zip \
+    && curl -L https://moodle.org/plugins/download.php/26715/block_xp_moodle40_2022052300.zip -o block_xp.zip \
     && unzip block_xp.zip \
     && rm block_xp.zip \
     && chown -R www-data:www-data xp
 
 # Install Plugin emailtest 1.4.0
 RUN cd /var/www/html/local \
-    && curl -L https://moodle.org/plugins/download.php/22516/local_mailtest_moodle311_2020092000.zip -o mailtest.zip \
+    ## && curl -L https://moodle.org/plugins/download.php/22516/local_mailtest_moodle311_2020092000.zip -o mailtest.zip \
+    && curl -L https://moodle.org/plugins/download.php/26523/local_mailtest_moodle40_2022042400.zip -o mailtest.zip \
     && unzip mailtest.zip \
     && rm mailtest.zip \
     && chown -R www-data:www-data mailtest

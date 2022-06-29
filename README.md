@@ -10,7 +10,9 @@ install docker: [https://docs.docker.com/engine/install/ubuntu/]
 install docker-compose: [https://docs.docker.com/compose/install/]
 
 
-## Moodle Version 3.9.7
+## Moodle Version 3.11.7+
+based on ubuntu/20.04 docker image (because 22.04 had php 8.0 which is not yet recommanded for production by Moodle team)
+
 Plugins:
 * BigBlueButton: 2.4.2
 * EJSApp: 3.1
