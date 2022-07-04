@@ -61,10 +61,6 @@ RUN apt-get update \
     texlive-fonts-recommended \
     poppler-utils \
     imagemagick \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update \
-    && apt-get install -y \
     texlive-latex-extra \
     texlive-science \
     texlive-fonts-extra \
@@ -100,7 +96,7 @@ RUN cd /var/www \
 COPY ./config-dist.php /var/www/html/config-dist.php
 
 # Plugin theme fordson
-RUN curl -L https://moodle.org/plugins/download.php/21786/theme_fordson_moodle39_2020061800.zip -o /fordson.zip \
+RUN curl -L https://moodle.org/plugins/download.php/24737/theme_fordson_moodle311_2021072100.zip -o /fordson.zip \
     && cp /fordson.zip /var/www/html/theme/ \
     && cd /var/www/html/theme \
     && unzip fordson.zip \
@@ -108,9 +104,9 @@ RUN curl -L https://moodle.org/plugins/download.php/21786/theme_fordson_moodle39
 
 # Plugin moodle-auth-saml2
 RUN cd /var/www/html/auth \
-    && wget https://moodle.org/plugins/download.php/24556/auth_saml2_moodle311_2021062900.zip -O auth_saml2.zip \
+    && wget https://moodle.org/plugins/download.php/26794/auth_saml2_moodle40_2022060900.zip -O auth_saml2.zip \
     && unzip auth_saml2.zip \
-    && mv moodle-auth_saml2* saml2 \
+    ##&& mv moodle-auth_saml2* saml2 \
     && rm auth_saml2.zip
 
 # plugin Pumukit
@@ -138,7 +134,7 @@ RUN cd /var/www/html/mod/ \
 
 # Plugin mod_questionnaire
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/22949/mod_questionnaire_moodle310_2020062302.zip -o questionnaire.zip \
+    && curl -L https://moodle.org/plugins/download.php/26900/mod_questionnaire_moodle40_2021062301.zip -o questionnaire.zip \
     && unzip questionnaire.zip \
     && chown -R www-data:www-data questionnaire \
     && rm questionnaire.zip
@@ -152,7 +148,7 @@ RUN cd /var/www/html/mod \
 
 # Install H5P - mod/hvp version 1.6 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
-    && curl -L  https://moodle.org/plugins/download.php/24438/mod_hvp_moodle311_2021061100.zip -o mod_hvp.zip \
+    && curl -L https://moodle.org/plugins/download.php/25878/mod_hvp_moodle40_2022012000.zip -o mod_hvp.zip \
     && unzip mod_hvp.zip \
     && chown -R www-data:www-data hvp \
     && rm mod_hvp.zip
@@ -250,6 +246,7 @@ RUN wget https://moodle.org/plugins/download.php/15063/moosh_moodle33_2017101600
     && wget https://gist.githubusercontent.com/nadavkav/2e016eb5cdf5634f8d9a4ed02ed32ebb/raw/22ebd3615992bebfc9ca979955f92e0b4a7c0113/Moosh_Command_Moodle23_Config_ConfigGet.php -O /moosh/Moosh/Command/Moodle23/Config/ConfigGet.php \
     && chmod a+x /moosh/moosh.php
 COPY icons/cernbox_icon.svg /var/www/html/repository/owncloud/pix/icon.svg
+
 COPY php.ini /etc/php/7.4/apache2/php.ini
 COPY config/ /config
 COPY configure.sh /configure.sh
@@ -274,7 +271,7 @@ RUN cd /var/www/html/local \
 
 # Install Plugin BigBlueButtonBN
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/24391/mod_bigbluebuttonbn_moodle311_2019101009.zip -o bbb.zip \
+    && curl -L https://moodle.org/plugins/download.php/26792/mod_bigbluebuttonbn_moodle311_2019101014.zip -o bbb.zip \
     && unzip bbb.zip \
     && rm bbb.zip \
     && chown -R www-data:www-data bigbluebuttonbn
@@ -297,14 +294,14 @@ RUN cd /var/www/html/mod \
 
 # Install Plugin CustomSQL
 RUN cd /var/www/html/report \
-    && curl -L  https://moodle.org/plugins/download.php/23125/report_customsql_moodle310_2020121800.zip -o customsql.zip \
+    && curl -L https://moodle.org/plugins/download.php/26177/report_customsql_moodle40_2022031800.zip -o customsql.zip \
     && unzip customsql.zip \
     && rm customsql.zip \
     && chown -R www-data:www-data customsql
 
 # Install Plugin CourseSize
 RUN cd /var/www/html/report \
-    && curl -L https://moodle.org/plugins/download.php/19641/report_coursesize_moodle37_2019052800.zip -o coursesize.zip \
+    && curl -L https://moodle.org/plugins/download.php/26640/report_coursesize_moodle40_2021030808.zip -o coursesize.zip \
     && unzip coursesize.zip \
     && rm coursesize.zip \
     && chown -R www-data:www-data coursesize

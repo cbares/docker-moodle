@@ -13,33 +13,37 @@ install docker-compose: [https://docs.docker.com/compose/install/]
 ## Moodle Version 3.11.7+
 based on ubuntu/20.04 docker image (because 22.04 had php 8.0 which is not yet recommanded for production by Moodle team)
 
-Plugins:
-* BigBlueButton: 2.4.2
+Updated Plugins:
+* EmailTest: 2.0.0   (System)
+* Level up!: 3.12.1  (Gamification)
+
+
+Old Plugins
+* BigBlueButton: 2.4.7
 * EJSApp: 3.1
-* H5P: 1.22.3
+* H5P: 1.22.4
 * JazzQuiz: 1.0.1
 * Knockplop: 1.0.1
-* Questionnaire: 3.9.1
+* Questionnaire: 3.11.1
 * Scheduler: 3.7.0
 * Category auto enrol: alpha (?useness?)
 * Remlab manager: 1.2
-* Level up!: 3.11.2
+* BlockXP: 3.12.1
 * Pumukit Personnal Recorder filter: 2017121200 [[disabled]] (useness?) 
 * Select eduOER content: 2018031402
-* PuMuKit PersonalRecorder (Atto): 2018072000
+* PuMuKit PersonalRecorder (Atto): 2018072000 (useness?)
 * Easy enrollement: v1.7.1 [[disabled]]
-* SAML2: 2021062900 [[disabled]]
+* SAML2: 2022060900 [[disabled]]
 * Logqtore xAPI: v4.6.0[[disabled]]
+* Course size: 4.1
+* Ad-hoc database queries: 4.2
 * DSpace Repository: 1.0.0 [[disabled]]
 * Open Source Physics: 1.3
 * ownCloud: v3.6-r1 [[disabled]]
 * SWORD Upload Repository: 0.9 [[disabled]]
-* Fordson (Theme): v3.9 - release 1.1
-* EmailTest: 1.4.0
+* Fordson (Theme): v3.11 - release 1
+* local Email Test: 2.0.0
 * Statistics module: 2019052802
-* Ad-hoc database queries: 4.0
-* Course size: 3.6
-
 
 
 ## update mysql 5.6 to 5.7
@@ -51,7 +55,6 @@ mysql_upgade -uroot -p$MYSQL_ROOT_PASSWORD
 ```
 
 ## Setup
-
 ```
 git clone https://github.com/up2university/docker-moodle.git
 cd docker-moodle
@@ -75,7 +78,7 @@ To spawn a new instance of Moodle:
 
 ```
 docker-compose build
-docker-compose up
+docker-compose up -d
 ```
 and, in a separate terminal, once the Docker containers are running,
 
