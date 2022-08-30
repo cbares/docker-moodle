@@ -10,15 +10,10 @@ install docker: [https://docs.docker.com/engine/install/ubuntu/]
 install docker-compose: [https://docs.docker.com/compose/install/]
 
 
-## Moodle Version 3.11.7+
+## Moodle Version 4.0.1+
 based on ubuntu/20.04 docker image (because 22.04 had php 8.0 which is not yet recommanded for production by Moodle team)
 
-Updated Plugins:
-* EmailTest: 2.0.0   (System)
-* Level up!: 3.12.1  (Gamification)
-
-
-Old Plugins
+Plugins
 * BigBlueButton: 2.4.7
 * EJSApp: 3.1
 * H5P: 1.22.4
@@ -28,7 +23,7 @@ Old Plugins
 * Scheduler: 3.7.0
 * Category auto enrol: alpha (?useness?)
 * Remlab manager: 1.2
-* BlockXP: 3.12.1
+* Level up!: 3.12.1  (Gamification)
 * Pumukit Personnal Recorder filter: 2017121200 [[disabled]] (useness?) 
 * Select eduOER content: 2018031402
 * PuMuKit PersonalRecorder (Atto): 2018072000 (useness?)
@@ -42,7 +37,7 @@ Old Plugins
 * ownCloud: v3.6-r1 [[disabled]]
 * SWORD Upload Repository: 0.9 [[disabled]]
 * Fordson (Theme): v3.11 - release 1
-* local Email Test: 2.0.0
+* EmailTest: 2.0.0   (System)
 * Statistics module: 2019052802
 
 

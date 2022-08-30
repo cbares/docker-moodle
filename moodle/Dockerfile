@@ -87,9 +87,9 @@ RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --
 
 # Install moodle 3.11
 RUN cd /var/www \
-    && curl -L 'https://download.moodle.org/download.php/direct/stable311/moodle-latest-311.tgz' -o moodle-3.11.7.tar.gz \
-    && tar -zxf moodle-3.11.7.tar.gz \
-    && rm moodle-3.11.7.tar.gz \
+    && curl -L 'https://download.moodle.org/download.php/direct/stable400/moodle-latest-400.tgz' -o moodle-4.0.1.tar.gz \
+    && tar -zxf moodle-4.0.1.tar.gz \
+    && rm moodle-4.0.1.tar.gz \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
@@ -104,7 +104,7 @@ RUN curl -L https://moodle.org/plugins/download.php/24737/theme_fordson_moodle31
 
 # Plugin moodle-auth-saml2
 RUN cd /var/www/html/auth \
-    && wget https://moodle.org/plugins/download.php/26794/auth_saml2_moodle40_2022060900.zip -O auth_saml2.zip \
+    && wget https://moodle.org/plugins/download.php/27375/auth_saml2_moodle40_2022081800.zip -O auth_saml2.zip \
     && unzip auth_saml2.zip \
     ##&& mv moodle-auth_saml2* saml2 \
     && rm auth_saml2.zip
@@ -270,11 +270,12 @@ RUN cd /var/www/html/local \
 
 
 # Install Plugin BigBlueButtonBN
-RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/26792/mod_bigbluebuttonbn_moodle311_2019101014.zip -o bbb.zip \
-    && unzip bbb.zip \
-    && rm bbb.zip \
-    && chown -R www-data:www-data bigbluebuttonbn
+#RUN cd /var/www/html/mod \
+    ##&& curl -L https://moodle.org/plugins/download.php/26792/mod_bigbluebuttonbn_moodle311_2019101014.zip -o bbb.zip \
+#    && curl -L 'https://moodle.org/plugins/download.php/26793/mod_bigbluebuttonbn_moodle311_2021101005.zip' -o bbb.zip \
+#    && unzip bbb.zip \
+#    && rm bbb.zip \
+#    && chown -R www-data:www-data bigbluebuttonbn
 
 
 # Install Plugin Scheduler
