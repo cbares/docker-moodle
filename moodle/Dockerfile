@@ -104,7 +104,7 @@ RUN curl -L https://moodle.org/plugins/download.php/24737/theme_fordson_moodle31
 
 # Plugin moodle-auth-saml2
 RUN cd /var/www/html/auth \
-    && wget https://moodle.org/plugins/download.php/26794/auth_saml2_moodle40_2022060900.zip -O auth_saml2.zip \
+    && wget https://moodle.org/plugins/download.php/27375/auth_saml2_moodle40_2022081800.zip -O auth_saml2.zip \
     && unzip auth_saml2.zip \
     ##&& mv moodle-auth_saml2* saml2 \
     && rm auth_saml2.zip
