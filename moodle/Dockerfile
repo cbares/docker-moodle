@@ -87,9 +87,9 @@ RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --
 
 # Install moodle 3.11
 RUN cd /var/www \
-    && curl -L 'https://download.moodle.org/download.php/direct/stable311/moodle-latest-311.tgz' -o moodle-3.11.7.tar.gz \
-    && tar -zxf moodle-3.11.7.tar.gz \
-    && rm moodle-3.11.7.tar.gz \
+    && curl -L 'https://download.moodle.org/download.php/direct/stable311/moodle-latest-311.tgz' -o moodle-3.11.9.tar.gz \
+    && tar -zxf moodle-3.11.9.tar.gz \
+    && rm moodle-3.11.9.tar.gz \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
