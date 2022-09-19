@@ -306,6 +306,10 @@ RUN cd /var/www/html/report \
     && rm coursesize.zip \
     && chown -R www-data:www-data coursesize
 
+
+RUN mkdir -p /root/texmf/tex/latex/atslmc
+COPY atslmc.sty /root/texmf/tex/latex/atslmc/atslmc.sty
+
 EXPOSE 80 443
 
 CMD ["/bin/bash", "/start.sh"]
