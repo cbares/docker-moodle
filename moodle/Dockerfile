@@ -307,8 +307,9 @@ RUN cd /var/www/html/report \
     && chown -R www-data:www-data coursesize
 
 
-RUN mkdir -p /root/texmf/tex/latex/atslmc
-COPY atslmc.sty /root/texmf/tex/latex/atslmc/atslmc.sty
+RUN mkdir -p /usr/local/share/texmf/tex/latex/atslmc
+COPY atslmc.sty /usr/local/share/texmf/tex/latex/atslmc/atslmc.sty
+RUN mktexlsr
 
 EXPOSE 80 443
 

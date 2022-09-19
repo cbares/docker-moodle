@@ -1,0 +1,146 @@
+\ProvidesPackage{atslmc}
+
+\usepackage{esint} %pour \oiint
+\usepackage{amssymb}
+\usepackage{latexsym}
+\usepackage{stmaryrd} % pour lbracket [[ et rbracket ]]
+\usepackage{dsfont} % pour doublestroke
+\usepackage{bbold} % pour blackboard
+\usepackage{mathrsfs} % pour mathscr
+
+
+%\DeclareMathSizes{8}{6}{4}{2}
+\newcommand{\dd}{\mathrm{d}}
+
+%Commande de Mika
+
+%Mode Display
+\newcommand{\di}{\displaystyle}
+
+
+%Espacement vertical
+\newcommand{\vp}{\vspace{\baselineskip}}
+
+
+%Ensembles usuels
+\newcommand{\K}{\ensuremath{\mathbb{K}}}
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+\newcommand{\C}{\ensuremath{\mathbb{C}}}
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+\newcommand{\N}{\ensuremath{\mathbb{N}}}
+\newcommand{\Q}{\ensuremath{\mathbb{Q}}}
+\newcommand{\U}{\ensuremath{\mathbb{U}}}
+
+
+%Majuscules calligraphiées - Mikaël utilise plutôt \mathcal
+\newcommand{\cA}{\ensuremath{\mathscr{A}}}
+\newcommand{\cL}{\ensuremath{\mathscr{L}}}
+\newcommand{\cS}{\ensuremath{\mathscr{S}}}
+\newcommand{\cB}{\ensuremath{\mathscr{B}}}
+\newcommand{\cR}{\ensuremath{\mathscr{R}}}
+\newcommand{\cQ}{\ensuremath{\mathscr{Q}}}
+\newcommand{\cU}{\ensuremath{\mathscr{U}}}
+\newcommand{\cH}{\ensuremath{\mathscr{H}}}
+\newcommand{\cG}{\ensuremath{\mathscr{G}}}
+\newcommand{\cI}{\ensuremath{\mathcal{I}}}
+\newcommand{\cN}{\ensuremath{\mathscr{N}}}
+\newcommand{\cD}{\ensuremath{\mathscr{D}}}
+\newcommand{\cC}{\ensuremath{\mathscr{C}}}
+\newcommand{\cP}{\ensuremath{\mathscr{P}}}
+\newcommand{\cE}{\ensuremath{\mathscr{E}}}
+\newcommand{\cF}{\ensuremath{\mathscr{F}}}
+\newcommand{\cM}{\ensuremath{\mathscr{M}}}
+\newcommand{\cT}{\ensuremath{\mathscr{T}}}
+\newcommand{\cV}{\ensuremath{\mathscr{V}}}
+\newcommand{\cO}{\ensuremath{\mathscr{O}}}
+
+
+%Ecriture française
+\renewcommand{\Re}{\text{Re}}
+\renewcommand{\Im}{\text{Im}}
+\renewcommand{\bar}{\overline}				%conjugaison
+\newcommand{\veps}{\varepsilon}				%epsilon
+
+
+%Algèbre linéaire - Création de nouveaux opérateurs
+\DeclareMathOperator{\card}{card}
+\DeclareMathOperator{\Vect}{Vect}
+\DeclareMathOperator{\Sp}{Sp}
+\DeclareMathOperator{\Ker}{Ker}
+\DeclareMathOperator{\rg}{rg}
+\DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\Mat}{Mat}
+\DeclareMathOperator{\Tr}{Tr}
+\newcommand{\norme}[1]{\left\Vert #1\right\Vert}	%norme
+\DeclareMathOperator{\GL}{GL}					%groupe linéaire
+\newcommand{\mat}[3]{(#1_{i,j})_{\substack{1\leqslant i\leqslant#2\\1\leqslant j\leqslant#3}}} % syntaxe utilisation : \mat{a}{n}{m}
+\newcommand{\transposee}[1]{{\vphantom{#1}}^{\mathit t}{#1}}
+
+
+
+%Comparaison
+\newcommand{\leqs}{\leqslant}
+\newcommand{\geqs}{\geqslant}
+
+
+%Flèches
+\newcommand{\ssi}{\Leftrightarrow}  				%équivalence
+\newcommand{\lssi}{\Longleftrightarrow}			%longue équivalence
+
+\newcommand{\imp}{\Rightarrow}				%implication
+\newcommand{\limp}{\Longrightarrow}			%longue implication
+
+
+%Limites
+\newcommand{\limplus}[2]{\lim_{#1\to +\infty}#2}
+\newcommand{\limmoins}[2]{\lim_{#1\to -\infty}#2}
+\newcommand{\tend}[2]{\underset{#1\to #2}{\longrightarrow}}
+
+
+%Fonctions usuelles
+\DeclareMathOperator{\e}{e} 					% exponentielle
+\DeclareMathOperator{\argch}{argch}
+\DeclareMathOperator{\argsh}{argsh}
+\DeclareMathOperator{\argth}{argth}
+\DeclareMathOperator{\sh}{sh}
+\DeclareMathOperator{\ch}{ch}
+\renewcommand{\th}{\text{th}}
+\DeclareMathOperator{\cotan}{cotan}
+
+
+%Développements limités
+\DeclareMathOperator{\DL}{DL}
+
+
+%Déclaration d'une fonction avec nom
+\newcommand{\fonction}[5]{\begin{array}{lrcl}
+#1: & #2 & \longrightarrow & #3 \\
+    & #4 & \longmapsto & #5 \end{array}}
+
+
+%Déclaration d'une fonction sans nom
+\newcommand{\fonctionlight}[4]{\begin{array}{rcl}
+#1 & \longrightarrow & #2 \\
+#3 & \longmapsto & #4 \end{array}}
+
+
+% Restriction d'une fonction
+\def\restriction#1#2{\mathchoice  				% syntaxe utilisation : restriction {f}{A}
+              {\setbox1\hbox{${\displaystyle #1}_{\scriptstyle #2}$}
+              \restrictionaux{#1}{#2}}
+              {\setbox1\hbox{${\textstyle #1}_{\scriptstyle #2}$}
+              \restrictionaux{#1}{#2}}
+              {\setbox1\hbox{${\scriptstyle #1}_{\scriptscriptstyle #2}$}
+              \restrictionaux{#1}{#2}}
+              {\setbox1\hbox{${\scriptscriptstyle #1}_{\scriptscriptstyle #2}$}
+              \restrictionaux{#1}{#2}}}
+\def\restrictionaux#1#2{{#1\,\smash{\vrule height .8\ht1 depth .85\dp1}}_{\,#2}} 
+
+
+%Suites
+\newcommand{\suite}[1]{(#1_n)_{n\in\N}}
+\newcommand{\suitez}[1]{(#1_n)_{n\in\N^*}}
+
+
+%Fonction de 2 variables
+\newcommand{\DX}[2]{\frac{\partial #1}{\partial #2}}
