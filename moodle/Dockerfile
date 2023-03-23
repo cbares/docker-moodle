@@ -254,15 +254,14 @@ RUN chmod a+x /configure.sh
 
 # Install Plugin XP (LevelUP!)
 RUN cd /var/www/html/blocks \
-    ## && curl -L https://moodle.org/plugins/download.php/24010/block_xp_moodle311_2021042802.zip -o block_xp.zip \
-    && curl -L https://moodle.org/plugins/download.php/26715/block_xp_moodle40_2022052300.zip -o block_xp.zip \
+    && curl -L https://moodle.org/plugins/download.php/28412/block_xp_moodle40_2022112610.zip -o block_xp.zip \
+
     && unzip block_xp.zip \
     && rm block_xp.zip \
     && chown -R www-data:www-data xp
 
 # Install Plugin emailtest 1.4.0
 RUN cd /var/www/html/local \
-    ## && curl -L https://moodle.org/plugins/download.php/22516/local_mailtest_moodle311_2020092000.zip -o mailtest.zip \
     && curl -L https://moodle.org/plugins/download.php/26523/local_mailtest_moodle40_2022042400.zip -o mailtest.zip \
     && unzip mailtest.zip \
     && rm mailtest.zip \
