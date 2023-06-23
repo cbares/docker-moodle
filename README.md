@@ -5,41 +5,54 @@ A Dockerfile that installs the latest Moodle, Apache and PHP. This uses the offi
 
 ## Pre-setup
 
-install docker: [https://docs.docker.com/engine/install/ubuntu/]
+install docker & compose plugin: [https://docs.docker.com/engine/install/ubuntu/]
 
-install docker-compose: [https://docs.docker.com/compose/install/]
+```sh
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
 
+## Moodle Version 4.1.4+
+based on ubuntu/22.04 docker image (which accept php 8.0)
 
-## Moodle Version 3.11.9+
-based on ubuntu/20.04 docker image (because 22.04 had php 8.0 which is not yet recommanded for production by Moodle team)
 
 Plugins
-* BigBlueButton: 2.4.7
-* EJSApp: 3.1
-* H5P: 1.22.4
-* JazzQuiz: 1.0.1
-* Knockplop: 1.0.1
-* Questionnaire: 3.11.1
-* Scheduler: 3.7.0
-* Category auto enrol: alpha (?useness?)
-* Remlab manager: 1.2
-* Level up!: 3.12.1  (Gamification)
-* Pumukit Personnal Recorder filter: 2017121200 [[disabled]] (useness?) 
-* Select eduOER content: 2018031402
-* PuMuKit PersonalRecorder (Atto): 2018072000 (useness?)
-* Easy enrollement: v1.7.1 [[disabled]]
-* SAML2: 2022081800 [[disabled]]
-* Logqtore xAPI: v4.6.0[[disabled]]
+* Learner Theme 4.2.r7(Formly Fordson Theme)
+* SAML2: 2022111701 [[disabled]]
+* Questionnaire: 4.0.1
+* H5P: 1.23.2
+* EJSApp: 4.0
+* EJSApp/Open Source Physics: 1.3
+* EJSApp/Remlab: 1.2
+* Moosh 1.11
+* Level up!: 3.14.1  (Gamification)
+* EmailTest: 2.0.2 (System)
+* Scheduler: 4.7.0
+* JazzQuiz: 1.2.0
+* Ad-hoc database queries: 4.2 
 * Course size: 4.1
-* Ad-hoc database queries: 4.2
-* DSpace Repository: 1.0.0 [[disabled]]
-* Open Source Physics: 1.3
-* ownCloud: v3.6-r1 [[disabled]]
-* SWORD Upload Repository: 0.9 [[disabled]]
-* Fordson (Theme): v3.11 - release 1
-* EmailTest: 2.0.0   (System)
-* Statistics module: 2019052802
 
+Removed: 
+* BigBlueButton (included in moodle 4)
+* Pumukit (Video server)
+* knockplop (p2p meeting)
+* ownCloud: v3.6-r1 [[disabled]]
+* easy enrollement
+* DSpace Repository: 1.0.0 [[disabled]]
+* SWORD Upload Repository: 0.9 [[disabled]]
+* Category auto enrol: alpha (?useness?)
+* Logqtore xAPI: v4.6.0[[disabled]]
+* Statistics module: 2019052802
+* Select eduOER content: 2018031402 [[???]]
 
 ## update mysql 5.6 to 5.7
 It's needed to run `mysql_upgrade` inside the container

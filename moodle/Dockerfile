@@ -46,6 +46,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/www/html
 
+# ImageMagick policy for editing PS / PDF
 RUN  sed -i -r 's/="none"( pattern="PS")/="read"\1/' /etc/ImageMagick-6/policy.xml
 
 COPY crontab /crontab
@@ -85,79 +86,52 @@ RUN ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/rew
 RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --domains \$VIRTUAL_HOST" > /certbot-setup.sh \
     && chmod 755 /certbot-setup.sh
 
-# Install moodle 3.11
+# Install moodle 4.1.4 https://download.moodle.org/releases/supported/
 RUN cd /var/www \
-    && curl -L 'https://download.moodle.org/download.php/direct/stable311/moodle-latest-311.tgz' -o moodle-3.11.9.tar.gz \
-    && tar -zxf moodle-3.11.9.tar.gz \
-    && rm moodle-3.11.9.tar.gz \
+    && curl -L 'https://download.moodle.org/download.php/direct/stable401/moodle-latest-401.tgz' -o moodle.tar.gz \
+    && tar -zxf moodle.tar.gz \
+    && rm moodle.tar.gz \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
 COPY ./config-dist.php /var/www/html/config-dist.php
 
-# Plugin theme fordson
-RUN curl -L https://moodle.org/plugins/download.php/24737/theme_fordson_moodle311_2021072100.zip -o /fordson.zip \
-    && cp /fordson.zip /var/www/html/theme/ \
-    && cd /var/www/html/theme \
-    && unzip fordson.zip \
-    && rm fordson.zip
+### Plugin installation: https://docs.moodle.org/402/en/Installing_plugins#Plugins_for_University_teaching ###
 
-# Plugin moodle-auth-saml2
+# Plugin theme learnr 4.2.r7 (formly fordson) https://moodle.org/plugins/theme_learnr
+RUN curl -L https://moodle.org/plugins/download.php/29140/theme_learnr_moodle42_2023050507.zip -o /learnr.zip \
+    && cp /learner.zip /var/www/html/theme/ \
+    && cd /var/www/html/theme \
+    && unzip learnr.zip \
+    && rm learnr.zip
+
+# Plugin moodle-auth-saml2 2022111701 https://moodle.org/plugins/auth_saml2
 RUN cd /var/www/html/auth \
-    && wget https://moodle.org/plugins/download.php/27375/auth_saml2_moodle40_2022081800.zip -O auth_saml2.zip \
+    && wget https://moodle.org/plugins/download.php/28869/auth_saml2_moodle41_2022111701.zip -O auth_saml2.zip \
     && unzip auth_saml2.zip \
     ##&& mv moodle-auth_saml2* saml2 \
     && rm auth_saml2.zip
 
-# plugin Pumukit
-COPY ./pumoodle/pumukit.zip /var/www/html/lib/editor/atto/plugins/pumukit.zip
-RUN cd /var/www/html/lib/editor/atto/plugins/ \
-    && unzip pumukit.zip \
-    && rm pumukit.zip
-
-COPY ./pumoodle/pumukitpr.zip /var/www/html/lib/editor/atto/plugins/pumukitpr.zip
-RUN cd /var/www/html/lib/editor/atto/plugins/ \
-    && unzip pumukitpr.zip \
-    && rm pumukitpr.zip
-
-COPY ./pumoodle/filterpr.zip /var/www/html/filter/filterpr.zip
-RUN cd /var/www/html/filter/ \
-    && unzip filterpr.zip \
-    && rm filterpr.zip
-
-# Plugin Knockplop
-COPY ./knockplop/knockplop.zip /var/www/html/mod/
-RUN cd /var/www/html/mod/ \
-    && unzip knockplop.zip \
-    && chown -R www-data:www-data knockplop \
-    && rm knockplop.zip
-
-# Plugin mod_questionnaire
+# Plugin mod_questionnaire 4.0.1 https://moodle.org/plugins/mod_questionnaire
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/26900/mod_questionnaire_moodle40_2021062301.zip -o questionnaire.zip \
+    && curl -L https://moodle.org/plugins/download.php/29228/mod_questionnaire_moodle42_2022092202.zip -o questionnaire.zip \
     && unzip questionnaire.zip \
     && chown -R www-data:www-data questionnaire \
     && rm questionnaire.zip
 
-# Plugin MultiPartyMetting
-#COPY ./multipartymeeting/multipartymeeting.zip /var/www/html/mod/
-#RUN cd /var/www/html/mod/ \
-#    && unzip multipartymeeting.zip \
-#    && chown -R www-data:www-data multipartymeeting \
-#    && rm multipartymeeting.zip
-
-# Install H5P - mod/hvp version 1.6 from https://moodle.org/plugins/mod_hvp
+# Install H5P - mod_hvp version 1.23.2 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/25878/mod_hvp_moodle40_2022012000.zip -o mod_hvp.zip \
+    && curl -L https://moodle.org/plugins/download.php/29419/mod_hvp_moodle42_2022092202.zip -o mod_hvp.zip \
     && unzip mod_hvp.zip \
     && chown -R www-data:www-data hvp \
     && rm mod_hvp.zip
 
 # Copy file to auto install H5P libraries
-COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
-RUN cd /var/www/html/mod/hvp \
-    && chown www-data:www-data autoinstallhvplibs.php \
-    && chmod 775 autoinstallhvplibs.php
+######### TESTS: this 
+#COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
+#RUN cd /var/www/html/mod/hvp \
+#    && chown www-data:www-data autoinstallhvplibs.php \
+#    && chmod 775 autoinstallhvplibs.php
 
 # Install VPL - mod/vpl version 1.6 from https://moodle.org/plugins/mod_vpl
 #RUN cd /var/www/html/mod \
@@ -169,138 +143,74 @@ RUN cd /var/www/html/mod/hvp \
 #    && chown -R www-data:www-data vpl \
 #    && rm mod_vpl.zip
 
-# Install EJSapp pack - mod/ejsapp version 3.0 from https://moodle.org/plugins/mod_ejsapp
+# Install EJSapp pack - mod/ejsapp version 4.0 from https://moodle.org/plugins/mod_ejsapp
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/19100/mod_ejsapp_moodle36_2019030300.zip  -o mod_ejsapp.zip \
+    && curl -L https://moodle.org/plugins/download.php/20650/mod_ejsapp_moodle38_2019112102.zip  -o mod_ejsapp.zip \
     && unzip mod_ejsapp.zip \
     && chown -R www-data:www-data ejsapp \
     && rm mod_ejsapp.zip
 
-# Install EJSapp repository - repository/osp version 3.0 from https://moodle.org/plugins/repository_osp
+# Install EJSapp repository - repository/osp version 1.3 from https://moodle.org/plugins/repository_osp
 RUN cd /var/www/html/repository \
     && curl -L https://moodle.org/plugins/download.php/17745/repository_osp_moodle36_2017051500.zip -o repository_osp.zip \
     && unzip repository_osp.zip \
     && rm repository_osp.zip
 
-# Install EJSapp remote lab manager - block/remlab_manager version 3.0 from https://moodle.org/plugins/block_remlab_manager
+# Install EJSapp remote lab manager - block/remlab_manager version 1.2 from https://moodle.org/plugins/block_remlab_manager
 RUN cd /var/www/html/blocks \
-    && curl -L https://moodle.org/plugins/download.php/19101/block_remlab_manager_moodle36_2019030300.zip -o block_remlab_manager.zip \
+    && curl -L https://moodle.org/plugins/download.php/20651/block_remlab_manager_moodle38_2019111907.zip -o block_remlab_manager.zip \
     && unzip block_remlab_manager.zip \
     && rm block_remlab_manager.zip
 
-# Install Category_Enrol (block) - blocks/category_enrol version 0.1 from https://github.com/iucc/moodle-block_category_enrol
-RUN cd /var/www/html/blocks \
-    && curl -L https://github.com/iucc/moodle-block_category_enrol/archive/a6a7b2d7f9496ff2deb1a6aa8322a0f25ad4ee94.zip -o block_category_enrol.zip \
-    && unzip block_category_enrol.zip \
-    && mv moodle-block_category_enrol* category_enrol \
-    && rm block_category_enrol.zip
-
-# Install Easy Enrollments - enrol/easy version 1.1 from https://moodle.org/plugins/enrol_easy
-RUN cd /var/www/html/enrol \
-    && curl -L https://moodle.org/plugins/download.php/23046/enrol_easy_moodle310_2020120700.zip -o enrol_easy.zip \
-    && unzip enrol_easy.zip \
-    && rm enrol_easy.zip
-
-# Install Plugin to use CERNBox as remote repository
-RUN cd /var/www/html/repository \
-    && wget https://moodle.org/plugins/download.php/18330/repository_owncloud_moodle36_2018112300.zip -O owncloud.zip \
-    && unzip owncloud.zip \
-    && rm owncloud.zip \
-    && chown -R www-data:www-data owncloud
-
-# Install DSpace Sword plugin (push metadata to Dspace)
-RUN cd /var/www/html/repository \
-    && wget https://github.com/up2university/sword_upload/archive/ce03bd0928ec7ecba46f058aa3660239d2ab777f.zip -O sword_upload.zip \
-    && unzip sword_upload.zip \
-    && rm sword_upload.zip \
-    && mv sword_upload* sword_upload \
-    && chown -R www-data:www-data sword_upload
-
-# Install DSpace API plugin (pull metadata from Dspace)
-RUN cd /var/www/html/repository \
-    && wget https://github.com/up2university/Moodle-Dspace-Plugin/archive/00389f06051ac9a152b36af6f3e0afbcaf8a34bc.zip -O Moodle-Dspace-Plugin.zip \
-    && unzip Moodle-Dspace-Plugin.zip \
-    && rm Moodle-Dspace-Plugin.zip \
-    && mv Moodle-Dspace-Plugin*/dspace dspace \
-    && rm -r Moodle-Dspace-Plugin* \
-    && chown -R www-data:www-data dspace
-
-# Install logstore_xapi plugin to send learning records to LRS
-# RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.2.5/xapi.zip -o /xapi.zip \
-RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.6.0/xapi.zip -o /xapi.zip \
-    && unzip /xapi.zip -d /var/www/html/admin/tool/log/store/ \
-    && rm /xapi.zip \
-    && chown -R www-data:www-data /var/www/html/admin/tool/log/store/xapi
-
-# Install Moodle stats - up2university/moodle_statistics from https://github.com/up2university/moodle_statistics 
-RUN cd /var/www/html/local \
-    && curl -L https://github.com/up2university/moodle_statistics/archive/34fcbb828abfcb9ce2b67a8b8979a4892b77ebe6.zip -o moodle_stat.zip \
-    && unzip moodle_stat.zip \
-    && mv moodle_statistics* statistics \
-    && rm moodle_stat.zip
-
-# Install Moosh
-RUN wget https://moodle.org/plugins/download.php/15063/moosh_moodle33_2017101600.zip -O /moosh.zip \
+# Install Moosh 1.11 https://moodle.org/plugins/view.php?id=522
+RUN wget https://moodle.org/plugins/download.php/29225/moosh_moodle42_2023051601.zip -O /moosh.zip \
     && unzip /moosh.zip \
     && rm /moosh.zip \
-    && wget https://gist.githubusercontent.com/nadavkav/2e016eb5cdf5634f8d9a4ed02ed32ebb/raw/22ebd3615992bebfc9ca979955f92e0b4a7c0113/Moosh_Command_Moodle23_Config_ConfigGet.php -O /moosh/Moosh/Command/Moodle23/Config/ConfigGet.php \
     && chmod a+x /moosh/moosh.php
-COPY icons/cernbox_icon.svg /var/www/html/repository/owncloud/pix/icon.svg
 
 COPY php.ini /etc/php/7.4/apache2/php.ini
 COPY config/ /config
 COPY configure.sh /configure.sh
 RUN chmod a+x /configure.sh
 
-# Install Plugin XP (LevelUP!)
+# Install Plugin XP (LevelUP!) 3.14.1 https://moodle.org/plugins/block_xp
 RUN cd /var/www/html/blocks \
-    && curl -L https://moodle.org/plugins/download.php/28412/block_xp_moodle40_2022112610.zip -o block_xp.zip \
-
+    && curl -L https://moodle.org/plugins/download.php/29335/block_xp_moodle42_2023042403.zip -o block_xp.zip \
     && unzip block_xp.zip \
     && rm block_xp.zip \
     && chown -R www-data:www-data xp
 
-# Install Plugin emailtest 1.4.0
+# Install Plugin emailtest 2.0.2 https://moodle.org/plugins/local_mailtest
 RUN cd /var/www/html/local \
-    && curl -L https://moodle.org/plugins/download.php/26523/local_mailtest_moodle40_2022042400.zip -o mailtest.zip \
+    && curl -L https://moodle.org/plugins/download.php/29145/local_mailtest_moodle42_2023050600.zip -o mailtest.zip \
     && unzip mailtest.zip \
     && rm mailtest.zip \
     && chown -R www-data:www-data mailtest
 
-
-# Install Plugin BigBlueButtonBN
+# Install Plugin Scheduler 4.0.0 https://moodle.org/plugins/mod_scheduler
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/26792/mod_bigbluebuttonbn_moodle311_2019101014.zip -o bbb.zip \
-    && unzip bbb.zip \
-    && rm bbb.zip \
-    && chown -R www-data:www-data bigbluebuttonbn
-
-
-# Install Plugin Scheduler
-RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/20738/mod_scheduler_moodle39_2019120200.zip -o sched.zip \
+    && curl -L https://moodle.org/plugins/download.php/29293/mod_scheduler_moodle42_2023052300.zip -o sched.zip \
     && unzip sched.zip \
     && rm sched.zip \
     && chown -R www-data:www-data scheduler
 
-
-# Install Plugin jazzquiz
+# Install Plugin jazzquiz 1.2.0 https://moodle.org/plugins/mod_jazzquiz
 RUN cd /var/www/html/mod \
-    && curl -L  https://moodle.org/plugins/download.php/23384/mod_jazzquiz_moodle310_2021020400.zip -o jazz.zip \
+    && curl -L  https://moodle.org/plugins/download.php/28844/mod_jazzquiz_moodle41_2023033100.zip -o jazz.zip \
     && unzip jazz.zip \
     && rm jazz.zip \
     && chown -R www-data:www-data jazzquiz
 
-# Install Plugin CustomSQL
+# Install Plugin CustomSQL 4.2 https://moodle.org/plugins/report_customsql
 RUN cd /var/www/html/report \
     && curl -L https://moodle.org/plugins/download.php/26177/report_customsql_moodle40_2022031800.zip -o customsql.zip \
     && unzip customsql.zip \
     && rm customsql.zip \
     && chown -R www-data:www-data customsql
 
-# Install Plugin CourseSize
+# Install Plugin CourseSize https://moodle.org/plugins/report_coursesize
 RUN cd /var/www/html/report \
-    && curl -L https://moodle.org/plugins/download.php/26640/report_coursesize_moodle40_2021030808.zip -o coursesize.zip \
+    && curl -L https://moodle.org/plugins/download.php/28315/report_coursesize_moodle41_2023010900.zip -o coursesize.zip \
     && unzip coursesize.zip \
     && rm coursesize.zip \
     && chown -R www-data:www-data coursesize
