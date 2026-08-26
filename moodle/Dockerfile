@@ -38,6 +38,7 @@ RUN apt-get update \
         php8.3-soap \
         php8.3-exif \
 	    imagemagick \
+        php-imagick \
         certbot \
         python3-certbot-apache \
 	    supervisor \ 
@@ -222,6 +223,14 @@ RUN cd /var/www/html/report \
     && unzip coursesize.zip \
     && rm coursesize.zip \
     && chown -R www-data:www-data moodle-report_coursesize-MOODLE_401_STABLE
+
+
+# Install Plugin CourseSize 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
+RUN cd /var/www/html/report \
+    && curl -L https://github.com/academic-moodle-cooperation/moodle-mod_offlinequiz/archive/refs/heads/MOODLE_405_STABLE.zip -o coursesize.zip \
+    && unzip coursesize.zip \
+    && rm coursesize.zip \
+    && chown -R www-data:www-data moodle-mod_offlinequiz-MOODLE_405_STABLE
 
 
 RUN mkdir -p /usr/local/share/texmf/tex/latex/atslmc
