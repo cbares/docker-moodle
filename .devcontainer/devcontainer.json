@@ -1,0 +1,30 @@
+{
+    "name": "ATS-LMC",
+    "privileged": false,
+    // "remoteUser": "poetry",
+    "service": "moodle",
+    "dockerComposeFile": "../docker-compose.yml",
+    "workspaceFolder": "/",
+    "customizations": {
+        "jetbrains": {
+            "settings": {
+                "Docker:app:DockerSettings.dockerComposePath": "/usr/local/bin/docker-compose",
+                "Docker:app:DockerSettings.dockerPath": "/usr/bin/docker"
+            }
+        },
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.debugpy",
+                "donjayamanne.python-extension-pack",
+                "eamodio.gitlens",
+                "ms-azuretools.vscode-docker",
+                "dbaeumer.vscode-eslint"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/opt/pysetup/.venv/bin/python"
+            }
+        }
+    }
+}

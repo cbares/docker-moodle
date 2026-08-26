@@ -2,13 +2,19 @@
 set -e
 set -u
 
+if [ -z "$HTTPS_PORT" ]; then
+  HTTPS_PORT=:443
+fi
+CHTTPS_PORT=:$HTTPS_PORT
+
+
 if [ ! -f /var/www/html/config.php ]; then
   sleep 10s
   sed -e "s/pgsql/mysqli/
   s/localhost/mysql/
   s/username/moodle/
   s/password/$MOODLE_PASSWORD/
-  s/http:\/\/example.com\/moodle/https:\/\/$VIRTUAL_HOST/
+  s/http:\/\/example.com\/moodle/https:\/\/$VIRTUAL_HOST$CHTTPS_PORT/
   s/\/var\/www\/html\/moodle/\/var\/www\/html\//
   s/\/home\/example\/moodledata/\/var\/moodledata/" /var/www/html/config-dist.php > /var/www/html/config.php
 
@@ -20,6 +26,7 @@ fi
 chown www-data: /var/moodledata -R
 
 sed -i "s/::VIRTUAL_HOST::/$VIRTUAL_HOST/g" /etc/apache2/sites-available/*
+sed -i "s/::HTTPS_PORT::/$HTTPS_PORT/g" /etc/apache2/sites-available/*
 
 cert_dir=/etc/letsencrypt/live/$VIRTUAL_HOST
 # if $cert_dir is empty or does not exist
@@ -36,4 +43,4 @@ fi
 
 
 # start all the services
-/usr/bin/supervisord -n
+/usr/bin/supervisord -n -c /etc/supervisord.conf

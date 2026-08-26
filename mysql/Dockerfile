@@ -1,7 +1,8 @@
-FROM mysql/mysql-server:5.7
+FROM mysql:8.4
 
-RUN yum -y install gettext \
-    && yum clean all
+# for envsubst, allow var substitution in config files
+RUN microdnf install -y gettext && \
+    microdnf clean all
 
 
 COPY ./my.cnf /etc/my.cnf
