@@ -118,15 +118,17 @@ COPY ./config-dist.php /var/www/html/config-dist.php
 RUN cd /var/www/html/mod \
     && curl -L https://github.com/PoetOS/moodle-mod_questionnaire/archive/refs/heads/MOODLE_404_STABLE.zip -o questionnaire.zip \
     && unzip questionnaire.zip \
-    && chown -R www-data:www-data moodle-mod_questionnaire-MOODLE_404_STABLE \
-    && rm questionnaire.zip
+    && rm questionnaire.zip \
+    && mv moodle-mod_questionnaire-MOODLE_404_STABLE questionnaire \
+    && chown -R www-data:www-data questionnaire
 
 # Install H5P - mod_hvp version 1.23.2 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
     && curl -L https://github.com/h5p/moodle-mod_hvp/archive/refs/heads/stable.zip -o mod_hvp.zip \
     && unzip mod_hvp.zip \
-    && chown -R www-data:www-data moodle-mod_hvp-stable \
-    && rm mod_hvp.zip
+    && rm mod_hvp.zip \
+    && mv moodle-mod_hvp-stable hvp \
+    && chown -R www-data:www-data hvp
 
 # Copy file to auto install H5P libraries
 ######### TESTS: this 
@@ -187,50 +189,57 @@ RUN cd /var/www/html/blocks \
     && curl -L https://github.com/FMCorz/moodle-block_xp/archive/refs/tags/v20.1.zip -o block_xp.zip \
     && unzip block_xp.zip \
     && rm block_xp.zip \
-    && chown -R www-data:www-data moodle-block_xp-20.1
+    && mv moodle-block_xp-20.1 xp \
+    && chown -R www-data:www-data xp
 
 # Install Plugin emailtest 3.18 https://moodle.org/plugins/local_mailtest
 RUN cd /var/www/html/local \
     && curl -L https://github.com/michael-milette/moodle-local_mailtest/archive/refs/tags/v3.1.8.zip -o mailtest.zip \
     && unzip mailtest.zip \
     && rm mailtest.zip \
-    && chown -R www-data:www-data moodle-local_mailtest-3.1.8
+    && mv moodle-local_mailtest-3.1.8 mailtest \
+    && chown -R www-data:www-data mailtest
 
 # Install Plugin Scheduler 4.0.0 (2023052300) https://moodle.org/plugins/mod_scheduler
 RUN cd /var/www/html/mod \
     && curl -L https://github.com/learnweb/moodle-mod_scheduler/archive/refs/tags/v5.2-r1.zip -o sched.zip \
     && unzip sched.zip \
     && rm sched.zip \
-    && chown -R www-data:www-data moodle-mod_scheduler-5.2-r1
+    && mv moodle-mod_scheduler-5.2-r1 scheduler \
+    && chown -R www-data:www-data scheduler
 
 # Install Plugin jazzquiz 1.3.2 https://moodle.org/plugins/mod_jazzquiz
 RUN cd /var/www/html/mod \
     && curl -L https://github.com/KQMATH/moodle-mod_jazzquiz/archive/refs/tags/v1.3.2.zip -o jazz.zip \
     && unzip jazz.zip \
     && rm jazz.zip \
-    && chown -R www-data:www-data moodle-mod_jazzquiz-1.3.2
+    && mv moodle-mod_jazzquiz-1.3.2 jazzquiz \
+    && chown -R www-data:www-data jazzquiz
 
 # Install Plugin CustomSQL 4.4 https://moodle.org/plugins/report_customsql
 RUN cd /var/www/html/report \
     && curl -L https://github.com/moodleou/moodle-report_customsql/archive/refs/heads/main.zip -o customsql.zip \
     && unzip customsql.zip \
     && rm customsql.zip \
-    && chown -R www-data:www-data moodle-report_customsql-main
+    && mv moodle-report_customsql-main customsql \
+    && chown -R www-data:www-data customsql
 
 # Install Plugin CourseSize 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
 RUN cd /var/www/html/report \
     && curl -L https://github.com/catalyst/moodle-report_coursesize/archive/refs/heads/MOODLE_401_STABLE.zip -o coursesize.zip \
     && unzip coursesize.zip \
     && rm coursesize.zip \
-    && chown -R www-data:www-data moodle-report_coursesize-MOODLE_401_STABLE
+    && mv moodle-report_coursesize-MOODLE_401_STABLE coursesize \
+    && chown -R www-data:www-data coursesize
 
 
 # Install Plugin CourseSize 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
-RUN cd /var/www/html/report \
-    && curl -L https://github.com/academic-moodle-cooperation/moodle-mod_offlinequiz/archive/refs/heads/MOODLE_405_STABLE.zip -o coursesize.zip \
-    && unzip coursesize.zip \
-    && rm coursesize.zip \
-    && chown -R www-data:www-data moodle-mod_offlinequiz-MOODLE_405_STABLE
+RUN cd /var/www/html/mod \
+    && curl -L https://github.com/academic-moodle-cooperation/moodle-mod_offlinequiz/archive/refs/heads/MOODLE_405_STABLE.zip -o offlinequiz.zip \
+    && unzip offlinequiz.zip \
+    && rm offlinequiz.zip \
+    && mv moodle-mod_offlinequiz-MOODLE_405_STABLE offlinequiz \
+    && chown -R www-data:www-data offlinequiz
 
 
 RUN mkdir -p /usr/local/share/texmf/tex/latex/atslmc
