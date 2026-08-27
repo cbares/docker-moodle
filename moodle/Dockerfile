@@ -122,12 +122,16 @@ RUN cd /var/www/html/mod \
     && mv moodle-mod_questionnaire-MOODLE_404_STABLE questionnaire \
     && chown -R www-data:www-data questionnaire
 
+# Install texlive & AMC dependencies 
+RUN apt-get update \
+    && apt-get install -y \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+
 # Install H5P - mod_hvp version 1.23.2 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
-    && curl -L https://github.com/h5p/moodle-mod_hvp/archive/refs/heads/stable.zip -o mod_hvp.zip \
-    && unzip mod_hvp.zip \
-    && rm mod_hvp.zip \
-    && mv moodle-mod_hvp-stable hvp \
+    && git clone --recursive https://github.com/h5p/moodle-mod_hvp hvp \
     && chown -R www-data:www-data hvp
 
 # Copy file to auto install H5P libraries
