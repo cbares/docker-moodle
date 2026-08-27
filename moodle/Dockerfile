@@ -250,6 +250,10 @@ RUN mkdir -p /usr/local/share/texmf/tex/latex/atslmc
 COPY atslmc.sty /usr/local/share/texmf/tex/latex/atslmc/atslmc.sty
 RUN mktexlsr
 
+RUN apt-get remove -y git \
+    && apt-get autoremove -y \
+    && apt-get clean
+
 EXPOSE 80 443
 
 CMD ["/bin/bash", "/start.sh"]
