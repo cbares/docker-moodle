@@ -237,16 +237,16 @@ RUN cd /var/www/html/report \
     && chown -R www-data:www-data coursesize
 
 
-# Install Plugin OfflineQuiz 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
-RUN cd /var/www/html/mod \
-    && curl -L https://github.com/academic-moodle-cooperation/moodle-mod_offlinequiz/archive/refs/heads/MOODLE_405_STABLE.zip -o offlinequiz.zip \
-    && unzip offlinequiz.zip \
-    && rm offlinequiz.zip \
-    && mv moodle-mod_offlinequiz-MOODLE_405_STABLE offlinequiz \
-    && chown -R www-data:www-data offlinequiz
+# # Install Plugin OfflineQuiz 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
+# RUN cd /var/www/html/mod \
+#     && curl -L https://github.com/academic-moodle-cooperation/moodle-mod_offlinequiz/archive/refs/heads/MOODLE_405_STABLE.zip -o offlinequiz.zip \
+#     && unzip offlinequiz.zip \
+#     && rm offlinequiz.zip \
+#     && mv moodle-mod_offlinequiz-MOODLE_405_STABLE offlinequiz \
+#     && chown -R www-data:www-data offlinequiz
 
-# Overwrite OfflineQuiz files with our patched versions (combined question + answer form PDF).
-COPY --chown=www-data:www-data ./offlinequiz-patch/ /var/www/html/mod/offlinequiz/
+COPY --chown=www-data:www-data ./offlinequiz/ /var/www/html/mod/offlinequiz/
+
 
 RUN mkdir -p /usr/local/share/texmf/tex/latex/atslmc
 COPY atslmc.sty /usr/local/share/texmf/tex/latex/atslmc/atslmc.sty

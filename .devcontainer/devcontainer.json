@@ -3,7 +3,7 @@
     "privileged": false,
     // "remoteUser": "poetry",
     "service": "moodle",
-    "dockerComposeFile": "../docker-compose.yml",
+    "dockerComposeFile": "../docker-compose.dev.yml",
     "workspaceFolder": "/",
     "customizations": {
         "jetbrains": {
