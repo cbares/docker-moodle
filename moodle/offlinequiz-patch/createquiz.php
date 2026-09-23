@@ -134,6 +134,10 @@ if ($downloadall && $offlinequiz->docscreated) {
         }
     }
 
+    if ($combinedallfile = offlinequiz_get_pdf_combined_all($context)) {
+        $filelist[$combinedpath . '/' . $combinedallfile->get_filename()] = $combinedallfile;
+    }
+
     $zipper = new zip_packer();
 
     if ($zipper->archive_to_pathname($filelist, $tempzip)) {
@@ -555,6 +559,30 @@ if ($mode == 'preview') {
                 } else {
                     echo $OUTPUT->notification(get_string('createpdferror', 'offlinequiz', $groupletter));
                 }
+            }
+
+            echo $OUTPUT->box_end();
+
+            // O========================================================.
+            // O Show/create a single file with the combined forms of all groups.
+            // O========================================================.
+            echo $OUTPUT->box_start('generalbox linkbox docsbox');
+
+            $combinedallfile = offlinequiz_get_pdf_combined_all($context);
+            if (!$combinedallfile) {
+                $combinedallfile = offlinequiz_create_pdf_combined_all($groups, $context);
+            }
+
+            if ($combinedallfile) {
+                $url = "$CFG->wwwroot/pluginfile.php/" . $combinedallfile->get_contextid() . '/' .
+                        $combinedallfile->get_component() . '/' . $combinedallfile->get_filearea() . '/' .
+                        $combinedallfile->get_itemid() . '/' . $combinedallfile->get_filename() . '?forcedownload=1';
+                echo $OUTPUT->action_link($url, get_string('combinedformall', 'offlinequiz'));
+                echo '<br />&nbsp;<br />';
+                @flush();
+                @ob_flush();
+            } else {
+                echo $OUTPUT->notification(get_string('createpdferror', 'offlinequiz', ''));
             }
 
             echo $OUTPUT->box_end();

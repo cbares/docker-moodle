@@ -999,8 +999,65 @@ function offlinequiz_get_pdf_combined($group, $context) {
 }
 
 /**
- * Generates a PDF for an offlinequiz group that contains the question form immediately followed by the answer form.
- * If the question form has an odd number of pages, a blank page is inserted before the answer form.
+ * Creates a version of a question form PDF with its first page (the cover page) removed and two of its pages
+ * printed per output page, side by side on a landscape A4 sheet. This halves the number of physical sheets
+ * needed to print the question form.
+ *
+ * @param string $sourcepath path to the source PDF file (the question form, whose first page is a cover page).
+ * @param string $outputpath path where the resulting PDF file is written.
+ * @return int the number of physical pages in the resulting PDF.
+ */
+function offlinequiz_create_pdf_question_2up($sourcepath, $outputpath) {
+    global $CFG;
+    require_once($CFG->dirroot . '/mod/assign/feedback/editpdf/classes/pdf.php');
+
+    $pdf = new \assignfeedback_editpdf\pdf();
+    $pdf->setPrintHeader(false);
+    $pdf->setPrintFooter(false);
+
+    $pagecount = $pdf->setSourceFile($sourcepath);
+    // Skip the cover page, unless it is the only page in the document.
+    $firstpage = ($pagecount > 1) ? 2 : 1;
+    $pagenumbers = range($firstpage, $pagecount);
+
+    // A4 portrait pages (210 x 297mm) scale down to exactly half of an A4 landscape sheet (297 x 210mm),
+    // so two source pages fill an output page side by side without any wasted space.
+    $halfwidth = 148.5;
+    $height = 210;
+
+    // Zoom in a bit more than the exact fit, so that the (mostly blank) outer margins of the source pages
+    // are cropped and the content is printed a little larger. The zoomed page is centered on its half of
+    // the sheet; the parts that no longer fit simply run off the edge of the sheet or into the gutter.
+    $zoom = 1.06;
+    $zoomedwidth = $halfwidth * $zoom;
+    $zoomedheight = $height * $zoom;
+    $xoffset = ($halfwidth - $zoomedwidth) / 2;
+    $yoffset = ($height - $zoomedheight) / 2;
+
+    $physicalpages = 0;
+    for ($i = 0; $i < count($pagenumbers); $i += 2) {
+        $pdf->AddPage('L', 'A4');
+        $physicalpages++;
+
+        $template = $pdf->importPage($pagenumbers[$i]);
+        $pdf->useTemplate($template, $xoffset, $yoffset, $zoomedwidth, $zoomedheight);
+
+        if (isset($pagenumbers[$i + 1])) {
+            $template = $pdf->importPage($pagenumbers[$i + 1]);
+            $pdf->useTemplate($template, $halfwidth + $xoffset, $yoffset, $zoomedwidth, $zoomedheight);
+        }
+    }
+
+    $pdf->Output($outputpath, 'F');
+
+    return $physicalpages;
+}
+
+/**
+ * Generates a PDF for an offlinequiz group that contains the answer form immediately followed by the question
+ * form. If the answer form is a single page, a blank page is inserted after it so that the question form starts
+ * on a new sheet when printing double-sided. The question form has its cover page removed and is printed two
+ * pages per sheet to save paper.
  * The question form and the answer form of the group must already exist.
  *
  * @param object $offlinequiz The offlinequiz object
@@ -1027,17 +1084,19 @@ function offlinequiz_create_pdf_combined($offlinequiz, $group, $context) {
     $tempdir = make_request_directory();
     $questionpath = $tempdir . '/question.pdf';
     $answerpath = $tempdir . '/answer.pdf';
+    $reducedquestionpath = $tempdir . '/question_2up.pdf';
     $combinedpath = $tempdir . '/combined.pdf';
     $questionfile->copy_content_to($questionpath);
     $answerfile->copy_content_to($answerpath);
 
-    $combiner = new \assignfeedback_editpdf\pdf();
     try {
-        $pdflist = [$questionpath];
-        // With an odd number of question pages, add a blank page so that the answer form starts on a new sheet
+        offlinequiz_create_pdf_question_2up($questionpath, $reducedquestionpath);
+
+        $pdflist = [$answerpath];
+        // With a 1-page answer form, add a blank page so that the question form starts on a new sheet
         // when printing double-sided.
         $counter = new \assignfeedback_editpdf\pdf();
-        if ($counter->setSourceFile($questionpath) % 2 == 1) {
+        if ($counter->setSourceFile($answerpath) == 1) {
             $blankpath = $tempdir . '/blank.pdf';
             $blank = new pdf('P', 'mm', 'A4');
             $blank->setPrintHeader(false);
@@ -1046,7 +1105,9 @@ function offlinequiz_create_pdf_combined($offlinequiz, $group, $context) {
             $blank->Output($blankpath, 'F');
             $pdflist[] = $blankpath;
         }
-        $pdflist[] = $answerpath;
+        $pdflist[] = $reducedquestionpath;
+
+        $combiner = new \assignfeedback_editpdf\pdf();
         $combiner->combine_pdfs($pdflist, $combinedpath);
     } catch (\Exception $e) {
         debugging('Could not combine question and answer form: ' . $e->getMessage(), DEBUG_DEVELOPER);
@@ -1065,6 +1126,101 @@ function offlinequiz_create_pdf_combined($offlinequiz, $group, $context) {
             'filename' => offlinequiz_get_combined_pdf_prefix($group) . $timestamp . '.pdf');
 
     return $fs->create_file_from_pathname($fileinfo, $combinedpath);
+}
+
+/**
+ * Finds the already generated PDF that concatenates the combined forms of all groups of an offlinequiz.
+ *
+ * @param object $context the context of the offline quiz.
+ * @return stored_file|bool the file or false if it does not exist.
+ */
+function offlinequiz_get_pdf_combined_all($context) {
+    $fs = get_file_storage();
+    $prefix = get_string('fileprefixcombinedall', 'offlinequiz') . '_';
+    $files = $fs->get_area_files($context->id, 'mod_offlinequiz', 'pdfs', 0, 'filename', false);
+    foreach ($files as $file) {
+        if (strpos($file->get_filename(), $prefix) === 0) {
+            return $file;
+        }
+    }
+    return false;
+}
+
+/**
+ * Concatenates the combined forms (question form + answer form) of all groups of an offlinequiz into a single
+ * PDF file, in group order. The combined form of every group must already exist. A blank page is inserted
+ * before a group's form whenever it would otherwise start on an even page, so that every group's form starts
+ * on an odd page (i.e. on the front of a sheet when printing double-sided).
+ *
+ * @param array $groups the offline group objects of the offlinequiz, keyed or not, in any order.
+ * @param object $context the context of the offline quiz.
+ * @return stored_file|bool the generated PDF file or false on failure.
+ */
+function offlinequiz_create_pdf_combined_all($groups, $context) {
+    global $CFG;
+    require_once($CFG->dirroot . '/mod/assign/feedback/editpdf/classes/pdf.php');
+
+    $fs = get_file_storage();
+    $tempdir = make_request_directory();
+
+    $pdflist = [];
+    $counter = new \assignfeedback_editpdf\pdf();
+    $pagecount = 0;
+    $i = 0;
+    foreach ($groups as $group) {
+        $combinedfile = offlinequiz_get_pdf_combined($group, $context);
+        if (!$combinedfile) {
+            return false;
+        }
+
+        // The next page in the output document is number $pagecount + 1. Insert a blank page if that would be
+        // even, so that this group's form starts on an odd page.
+        if ($pagecount % 2 == 1) {
+            $blankpath = $tempdir . '/blank' . $i . '.pdf';
+            $blank = new pdf('P', 'mm', 'A4');
+            $blank->setPrintHeader(false);
+            $blank->setPrintFooter(false);
+            $blank->AddPage();
+            $blank->Output($blankpath, 'F');
+            $pdflist[] = $blankpath;
+            $pagecount++;
+        }
+
+        $path = $tempdir . '/group' . $i++ . '.pdf';
+        $combinedfile->copy_content_to($path);
+        $pdflist[] = $path;
+        $pagecount += $counter->setSourceFile($path);
+    }
+    if (empty($pdflist)) {
+        return false;
+    }
+
+    // Remove a concatenated file left over from a previous run.
+    while ($oldfile = offlinequiz_get_pdf_combined_all($context)) {
+        $oldfile->delete();
+    }
+
+    $outputpath = $tempdir . '/combined_all.pdf';
+    try {
+        $combiner = new \assignfeedback_editpdf\pdf();
+        $combiner->combine_pdfs($pdflist, $outputpath);
+    } catch (\Exception $e) {
+        debugging('Could not concatenate the combined forms: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        return false;
+    }
+
+    $date = usergetdate(time());
+    $timestamp = sprintf('%04d%02d%02d_%02d%02d%02d',
+            $date['year'], $date['mon'], $date['mday'], $date['hours'], $date['minutes'], $date['seconds']);
+    $fileinfo = array(
+            'contextid' => $context->id,
+            'component' => 'mod_offlinequiz',
+            'filearea' => 'pdfs',
+            'filepath' => '/',
+            'itemid' => 0,
+            'filename' => get_string('fileprefixcombinedall', 'offlinequiz') . '_' . $timestamp . '.pdf');
+
+    return $fs->create_file_from_pathname($fileinfo, $outputpath);
 }
 
 /**
