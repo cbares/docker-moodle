@@ -1028,7 +1028,7 @@ function offlinequiz_create_pdf_question_2up($sourcepath, $outputpath) {
     // Zoom in a bit more than the exact fit, so that the (mostly blank) outer margins of the source pages
     // are cropped and the content is printed a little larger. The zoomed page is centered on its half of
     // the sheet; the parts that no longer fit simply run off the edge of the sheet or into the gutter.
-    $zoom = 1.06;
+    $zoom = 1.02;
     $zoomedwidth = $halfwidth * $zoom;
     $zoomedheight = $height * $zoom;
     $xoffset = ($halfwidth - $zoomedwidth) / 2;
