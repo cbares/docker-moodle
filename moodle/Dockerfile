@@ -88,7 +88,7 @@ RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --
 
 # Install moodle 4.5.13 https://download.moodle.org/releases/supported/
 RUN cd /var/www \
-    && curl -L 'https://download.moodle.org/download.php/direct/stable405/moodle-latest-405.tgz' -o moodle.tar.gz \
+    && curl -L 'https://download.moodle.org/download.php/stable405/moodle-4.5.15.tgz' -o moodle.tar.gz \
     && tar -zxf moodle.tar.gz \
     && rm moodle.tar.gz \
     && mv /var/www/moodle* /var/www/html \
