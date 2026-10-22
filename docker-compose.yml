@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: ghcr.io/cbares/docker-moodle/mysql:moodle4.5
+    image: ghcr.io/cbares/docker-moodle/mysql:latest
     build: mysql
     restart: unless-stopped
     env_file:
@@ -10,7 +10,7 @@ services:
       - ./data/moodle-mysql:/var/lib/mysql
     #entrypoint: ["sh", "-c", "sleep 2073600"]
   moodle:
-    image: ghcr.io/cbares/docker-moodle/moodle:moodle4.5
+    image: ghcr.io/cbares/docker-moodle/moodle:latest
     build: moodle
     restart: unless-stopped
     links:
