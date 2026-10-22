@@ -102,6 +102,7 @@ class offlinequiz_html_translator {
                 $pluginfilename = $attributes['src'];
                 $imageurl = false;
                 $teximage = false;
+                $invaliddatauri = false;
                 $parts = preg_split("!$CFG->wwwroot/filter/tex/pix.php/!", $pluginfilename);
 
                 if (preg_match('!@@PLUGINFILE@@/!', $pluginfilename)) {
@@ -176,8 +177,19 @@ class offlinequiz_html_translator {
                         $teximage = true;
                     }
                 } else {
-                    // Image file URL.
+                    // Image file URL, or an inline "data:image/...;base64,..." URI pasted directly into the text.
                     $imageurl = true;
+
+                    // A data: URI is not fetched from anywhere, so we can validate it cheaply here: decode it and
+                    // check it is actually a real, decodable image. Without this, a corrupt or truncated base64
+                    // blob stored in the question text reaches TCPDF as invalid image data later on, which
+                    // crashes PDF generation entirely instead of just that one image.
+                    if (preg_match('!^data:image/[^;]+;base64,(.*)$!s', $pluginfilename, $matches)) {
+                        $decoded = base64_decode($matches[1], true);
+                        if ($decoded === false || @getimagesizefromstring($decoded) === false) {
+                            $invaliddatauri = true;
+                        }
+                    }
                 }
 
                 $factor = 2; // Per default show images half sized.
@@ -265,6 +277,8 @@ class offlinequiz_html_translator {
                         $output .= ' align="middle" width="' . $width . '" height="' .
                                 $height . '"/>';
                     }
+                } else if ($invaliddatauri) {
+                    $output .= get_string('imagenotfound', 'offlinequiz', '(embedded image)');
                 } else {
                     if (($imagewidth > 0) && ($imageheight > 0)) {
                         $width = $imagewidth / ($kfactor * $factor);
