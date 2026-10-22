@@ -1,0 +1,319 @@
+<?php
+// This file is part of mod_offlinequiz for Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Creates the PDF forms for offlinequizzes
+ *
+ * @package       mod_offlinequiz
+ * @subpackage    offlinequiz
+ * @author        Juergen Zimmer <zimmerj7@univie.ac.at>
+ * @copyright     2012 University of Vienna
+ * @since         Moodle 2.2+
+ * @license       http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/**
+ * extracts the text from the html
+ */
+class offlinequiz_html_translator {
+    /**
+     * temporary files
+     * @var array
+     */
+    private $tempfiles = [];
+    /**
+     * constructor
+     */
+    public function __construct() {
+        $this->tempfiles = [];
+    }
+
+    /**
+     * Function to replace @@PLUGINFILE@@ references to image files by local file:// URLs.
+     *
+     * @param string $input The input string (Moodle HTML)
+     * @param int $contextid The context ID.
+     * @param string $filearea The filearea used to locate the image files.
+     * @param int $itemid The itemid used to locate the image files.
+     * @param float $kfactor A magnification factor.
+     * @param int $maxwidth The maximum width in pixels for images.
+     * @param bool $disableimgnewlines
+     * @param string $format
+     * @return string The result string
+     */
+    public function fix_image_paths(
+        $input,
+        $contextid,
+        $filearea,
+        $itemid,
+        $kfactor,
+        $maxwidth,
+        $disableimgnewlines,
+        $format = 'pdf'
+    ) {
+        global $CFG, $DB, $OUTPUT;
+        require_once($CFG->dirroot . '/filter/tex/lib.php');
+        require_once($CFG->dirroot . '/filter/tex/latex.php');
+        $file = null;
+        $fs = get_file_storage();
+        $output = $input;
+        $strings = preg_split("/<img/i", $output);
+        $output = array_shift($strings);
+        foreach ($strings as $string) {
+            // Define a unique temporary name for each image file.
+            $unique = str_replace('.', '', microtime(true) . '_' . rand(0, 100000));
+
+            $imagetag = substr($string, 0, strpos($string, '>'));
+            // Extract attributes with a quote-aware regex rather than naively splitting on spaces: a base64-encoded
+            // image can be stored wrapped onto several lines (e.g. by an import/migration tool), so its "src"
+            // value may contain spaces and line breaks. Splitting on every space would otherwise chop that value
+            // into pieces and keep only the first few characters of the image data.
+            $attributes = [];
+            preg_match_all('/([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|(\S+))/', $imagetag, $attrmatches,
+                    PREG_SET_ORDER);
+            foreach ($attrmatches as $attrmatch) {
+                $name = strtolower(trim($attrmatch[1]));
+                if (!empty($attrmatch[2])) {
+                    $value = $attrmatch[2];
+                } else if (!empty($attrmatch[3])) {
+                    $value = $attrmatch[3];
+                } else {
+                    $value = $attrmatch[4] ?? '';
+                }
+                $attributes[$name] = $value;
+            }
+
+            if (array_key_exists('width', $attributes) && $attributes['width'] > 0) {
+                $imagewidth = $attributes['width'];
+            } else {
+                $imagewidth = 0;
+            }
+            if (array_key_exists('height', $attributes) && $attributes['height'] > 0) {
+                $imageheight = $attributes['height'];
+            } else {
+                $imageheight = 0;
+            }
+
+            $imagefilename = '';
+            if (array_key_exists('src', $attributes) && strlen($attributes['src']) > 10) {
+                $pluginfilename = $attributes['src'];
+                $imageurl = false;
+                $teximage = false;
+                $invaliddatauri = false;
+                $parts = preg_split("!$CFG->wwwroot/filter/tex/pix.php/!", $pluginfilename);
+
+                if (preg_match('!@@PLUGINFILE@@/!', $pluginfilename)) {
+                    $pluginfilename = str_replace('@@PLUGINFILE@@/', '', $pluginfilename);
+                    $pathparts = pathinfo($pluginfilename);
+                    if (!empty($pathparts['dirname']) && $pathparts['dirname'] != '.') {
+                        $filepath = '/' . $pathparts['dirname'] . '/';
+                    } else {
+                        $filepath = '/';
+                    }
+                    if (
+                        $imagefile = $fs->get_file(
+                            $contextid,
+                            'question',
+                            $filearea,
+                            $itemid,
+                            $filepath,
+                            rawurldecode($pathparts['basename'])
+                        )
+                    ) {
+                        $imagefilename = $imagefile->get_filename();
+                        // Copy image content to temporary file.
+                        $pathparts = pathinfo($imagefilename);
+                        $filetype = $pathparts["extension"];
+                        $file = $CFG->tempdir . "/offlinequiz/" . $unique . '.' . strtolower($filetype);
+                        clearstatcache();
+                        if (!check_dir_exists($CFG->tempdir . "/offlinequiz", true, true)) {
+                            throw new \moodle_exception("Could not create data directory");
+                        }
+                        $imagefile->copy_content_to($file);
+                    } else {
+                        $output .= 'Image file not found ' . $pathparts['dirname'] . '/' . $pathparts['basename'];
+                    }
+                } else if (count($parts) > 1) {
+                    $teximagefile = $CFG->dataroot . '/filter/tex/' . $parts[1];
+                    if (!file_exists($teximagefile)) {
+                        // Create the TeX image if it does not exist yet.
+                        $convertformat = $DB->get_field('config_plugins', 'value', ['plugin' => 'filter_tex',
+                                'name' => 'convertformat']);
+                        $md5 = str_replace(".{$convertformat}", '', $parts[1]);
+                        if ($texcache = $DB->get_record('cache_filters', ['filter' => 'tex', 'md5key' => $md5])) {
+                            if (!file_exists($CFG->dataroot . '/filter/tex')) {
+                                make_upload_directory('filter/tex');
+                            }
+
+                            // Try and render with latex first.
+                            $latex = new latex();
+                            $density = $DB->get_field('config_plugins', 'value', ['plugin' => 'filter_tex',
+                                'name' => 'density']);
+                            $background = $DB->get_field('config_plugins', 'value', ['plugin' => 'filter_tex',
+                                'name' => 'latexbackground']);
+                            $texexp = trim($texcache->rawtext); // The entities are now decoded before inserting to DB.
+                            // Remove non breaking spaces.
+                            $texexp = trim(str_replace(" ", "", $texexp));
+                            $latexpath = $latex->render($texexp, $parts[1], 12, $density, $background);
+                            if ($latexpath) {
+                                copy($latexpath, $teximagefile);
+                            }
+                        }
+                    }
+                    $pathparts = pathinfo($teximagefile);
+
+                    $file = $CFG->tempdir . "/offlinequiz/" . $unique . '.' . strtolower($pathparts["extension"]);
+                    clearstatcache();
+                    if (!check_dir_exists($CFG->tempdir . "/offlinequiz", true, true)) {
+                        throw new \moodle_exception("Could not create data directory");
+                    }
+                    if (!file_exists($teximagefile)) {
+                        echo $OUTPUT->notification(get_string('errorcouldnotcreatetex', 'offlinequiz'), 'notifyproblem');
+                    } else {
+                        copy($teximagefile, $file);
+                        $teximage = true;
+                    }
+                } else {
+                    // Image file URL, or an inline "data:image/...;base64,..." URI pasted directly into the text.
+                    $imageurl = true;
+
+                    // A data: URI is not fetched from anywhere, so we can validate it cheaply here: decode it and
+                    // check it is actually a real, decodable image. Without this, a corrupt or truncated base64
+                    // blob stored in the question text reaches TCPDF as invalid image data later on, which
+                    // crashes PDF generation entirely instead of just that one image.
+                    if (preg_match('!^data:image/[^;]+;base64,(.*)$!s', $pluginfilename, $matches)) {
+                        $decoded = base64_decode($matches[1], true);
+                        if ($decoded === false || @getimagesizefromstring($decoded) === false) {
+                            $invaliddatauri = true;
+                        }
+                    }
+                }
+
+                $factor = 2; // Per default show images half sized.
+                if (!$imageurl) {
+                    // Validate that the file actually exists and is a real, decodable image before doing
+                    // anything else with it. A missing file blob or a corrupt/incomplete image would otherwise
+                    // reach TCPDF as invalid image data later on, which crashes PDF generation entirely instead
+                    // of just that one image.
+                    $imageinfo = (file_exists($file)) ? @getimagesize($file) : false;
+                    if ($imageinfo === false) {
+                        $output .= get_string('imagenotfound', 'offlinequiz', $file);
+                    } else {
+                        // Use imagemagick to remove alpha channel and reduce resolution of large images.
+                        $filewidth  = $imageinfo[0];
+                        $fileheight = $imageinfo[1];
+                        $pathconvert = $DB->get_field('config_plugins', 'value', ['plugin' => 'filter_tex',
+                                          'name' => 'pathconvert']);
+
+                        if (file_exists($pathconvert) && $filewidth > 0 && $fileheight > 0) {
+                            $newfile = $CFG->tempdir . "/offlinequiz/" . $unique . '_c.png';
+                            $resize = '';
+                            $percent = round(200000000 / ($filewidth * $fileheight));
+                            if ($percent < 100) {
+                                $resize = ' -resize ' . $percent . '%';
+                            }
+                            $handle = popen($pathconvert . ' ' . $file . $resize . ' -background white -flatten +matte ' .
+                                    $newfile, 'r');
+                            pclose($handle);
+                            $this->tempfiles[] = $file;
+                            // Only switch to the converted file if imagemagick actually produced a valid image;
+                            // otherwise keep using the original (unconverted) file.
+                            if (@getimagesize($newfile) !== false) {
+                                $file = $newfile;
+                                if ($percent < 100) {
+                                    $imageinfo = getimagesize($file);
+                                    $filewidth  = $imageinfo[0];
+                                    $fileheight = $imageinfo[1];
+                                }
+                            }
+                        }
+
+                        if ($imagewidth > 0) {
+                            if ($imageheight > 0) {
+                                $fileheight = $imageheight;
+                            } else {
+                                $fileheight = $imagewidth / $filewidth * $fileheight;
+                            }
+                            $filewidth = $imagewidth;
+                        }
+
+                        if ($teximage) {
+                            if ($format == 'pdf') {
+                                $factor = $factor * 1.2;
+                            } else {
+                                $factor = $factor * 1.5;
+                            }
+                        }
+
+                        $width = round($filewidth / ($kfactor * $factor));
+
+                        if ($width > $maxwidth) {
+                            $width = $maxwidth;
+                        }
+
+                        $height = round($fileheight * $width / $filewidth);
+
+                        // Add filename to list of temporary files.
+                        $this->tempfiles[] = $file;
+
+                        // In answer texts we want a line break to avoid the picture going above the line.
+                        if ($filearea == 'answer' && $disableimgnewlines == 0) {
+                            $output .= '<br/>';
+                        }
+                        $img = file_get_contents(
+                            $file
+                        );
+                        if ($format == 'pdf') {
+                            // Encode the image string data into base64.
+                            $data = base64_encode($img);
+                            // Finally, add the image tag for tcpdf.
+                            $output .= '<img src="@' . $data . '"';
+                        } else {
+                            $output .= '<img src="file://' . $file . '"';
+                        }
+                        $output .= ' align="middle" width="' . $width . '" height="' .
+                                $height . '"/>';
+                    }
+                } else if ($invaliddatauri) {
+                    $output .= get_string('imagenotfound', 'offlinequiz', '(embedded image)');
+                } else {
+                    if (($imagewidth > 0) && ($imageheight > 0)) {
+                        $width = $imagewidth / ($kfactor * $factor);
+                        if ($width > $maxwidth) {
+                            $width = $maxwidth;
+                        }
+                        $height = $imageheight * $width / $imagewidth;
+                        $output .= '<img src="' . $pluginfilename . '" align="middle" width="' . $width . '" height="' .
+                            $height . '"/>';
+                    } else {
+                        $output .= '<img src="' . $pluginfilename . '" align="middle"/>';
+                    }
+                }
+            }
+            $output .= substr($string, strpos($string, '>') + 1);
+        }
+        return $output;
+    }
+
+    /**
+     * Removes all the temporary image files created for document creation only.
+     */
+    public function remove_temp_files() {
+        foreach ($this->tempfiles as $file) {
+            unlink($file);
+        }
+    }
+}

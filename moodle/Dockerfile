@@ -1,55 +1,53 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl \
     && ln -sf /bin/true /sbin/initctl
 
 # Let the conatiner know that there is no tty
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install all apt dependencies
 RUN apt-get update \
     && apt-get install -y \
         software-properties-common \
     && apt-key adv --keyserver "hkp://keyserver.ubuntu.com:80" --recv 'E5267A6C' \
-    #&& LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php \
-    #&& add-apt-repository ppa:certbot/certbot \
-    && apt-get update \
     && apt-get install -y \
-        python-setuptools \
+        python3-setuptools \
         unzip \
         gettext \
         apache2 \
-        php7.4 \
+        php8.3 \
         php-gd \
-        libapache2-mod-php7.4 \
+        libapache2-mod-php8.3 \
         postfix \
         wget \
-        php7.4-pgsql \
+        php8.3-pgsql \
         vim \
         curl \
         libcurl4 \
         libcurl4-openssl-dev \
-        php7.4-curl \
-        php7.4-xml \
-        php7.4-xmlrpc \
-        php7.4-intl \
-        php7.4-mysql \
-        php7.4-zip \
-        php7.4-mbstring \
-        php7.4-soap \
-        #php7.0-mcrypt \
-	imagemagick
+        libsodium23 \
+        php8.3-curl \
+        php8.3-xml \
+        php8.3-xmlrpc \
+        php8.3-intl \
+        php8.3-mysql \
+        php8.3-zip \
+        php8.3-mbstring \
+        php8.3-soap \
+        php8.3-exif \
+	    imagemagick \
+        php-imagick \
         certbot \
         python3-certbot-apache \
-	supervisor \ 
-	sudo \
+	    supervisor \ 
+	    sudo \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/www/html
 
+# ImageMagick policy for editing PS / PDF
 RUN  sed -i -r 's/="none"( pattern="PS")/="read"\1/' /etc/ImageMagick-6/policy.xml
-
-
 
 COPY crontab /crontab
 RUN apt-get update \
@@ -64,10 +62,6 @@ RUN apt-get update \
     texlive-fonts-recommended \
     poppler-utils \
     imagemagick \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update \
-    && apt-get install -y \
     texlive-latex-extra \
     texlive-science \
     texlive-fonts-extra \
@@ -92,80 +86,62 @@ RUN ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/rew
 RUN echo "certbot --non-interactive --agree-tos --email \$CERT_EMAIL --apache --domains \$VIRTUAL_HOST" > /certbot-setup.sh \
     && chmod 755 /certbot-setup.sh
 
-# Install moodle 3.11
+# Install moodle 4.5.13 https://download.moodle.org/releases/supported/
 RUN cd /var/www \
-    && curl -L 'https://github.com/moodle/moodle/archive/refs/tags/v3.11.0.tar.gz' -o moodle-3.11.0.tar.gz \
-    && tar zxf moodle-3.11.0.tar.gz \
-    && rm moodle-3.11.0.tar.gz \
+    && curl -L 'https://packaging.moodle.org/stable405/moodle-4.5.15.zip' -o moodle.zip \
+    && unzip moodle.zip \
+    && rm moodle.zip \
     && mv /var/www/moodle* /var/www/html \
     && chown -R www-data:www-data /var/www/html/
 
 COPY ./config-dist.php /var/www/html/config-dist.php
 
-# Plugin theme fordson
-RUN curl -L https://moodle.org/plugins/download.php/21786/theme_fordson_moodle39_2020061800.zip -o /fordson.zip \
-    && cp /fordson.zip /var/www/html/theme/ \
-    && cd /var/www/html/theme \
-    && unzip fordson.zip \
-    && rm fordson.zip
+### Plugin installation: https://docs.moodle.org/402/en/Installing_plugins#Plugins_for_University_teaching ###
 
-# Plugin moodle-auth-saml2
-RUN cd /var/www/html/auth \
-    && wget https://moodle.org/plugins/download.php/24556/auth_saml2_moodle311_2021062900.zip -O auth_saml2.zip \
-    && unzip auth_saml2.zip \
-    && mv moodle-auth_saml2* saml2 \
-    && rm auth_saml2.zip
+### NON UTILISE
+# # Plugin theme learnr 4.2.r7 (formly fordson) https://moodle.org/plugins/theme_learnr
+# RUN curl -L https://moodle.org/plugins/download.php/29140/theme_learnr_moodle42_2023050507.zip -o /learnr.zip \
+#     && cp /learnr.zip /var/www/html/theme/ \
+#     && cd /var/www/html/theme \
+#     && unzip learnr.zip \
+#     && rm learnr.zip
 
-# plugin Pumukit
-COPY ./pumoodle/pumukit.zip /var/www/html/lib/editor/atto/plugins/pumukit.zip
-RUN cd /var/www/html/lib/editor/atto/plugins/ \
-    && unzip pumukit.zip \
-    && rm pumukit.zip
+### INUTILE
+# # Plugin moodle-auth-saml2 2022111701 https://moodle.org/plugins/auth_saml2
+# RUN cd /var/www/html/auth \
+#     && wget https://moodle.org/plugins/download.php/28869/auth_saml2_moodle41_2022111701.zip -O auth_saml2.zip \
+#     && unzip auth_saml2.zip \
+#     ##&& mv moodle-auth_saml2* saml2 \
+#     && rm auth_saml2.zip
 
-COPY ./pumoodle/pumukitpr.zip /var/www/html/lib/editor/atto/plugins/pumukitpr.zip
-RUN cd /var/www/html/lib/editor/atto/plugins/ \
-    && unzip pumukitpr.zip \
-    && rm pumukitpr.zip
-
-COPY ./pumoodle/filterpr.zip /var/www/html/filter/filterpr.zip
-RUN cd /var/www/html/filter/ \
-    && unzip filterpr.zip \
-    && rm filterpr.zip
-
-# Plugin Knockplop
-COPY ./knockplop/knockplop.zip /var/www/html/mod/
-RUN cd /var/www/html/mod/ \
-    && unzip knockplop.zip \
-    && chown -R www-data:www-data knockplop \
-    && rm knockplop.zip
-
-# Plugin mod_questionnaire
+# Plugin mod_questionnaire 4.4.0 https://moodle.org/plugins/mod_questionnaire
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/22949/mod_questionnaire_moodle310_2020062302.zip -o questionnaire.zip \
+    && curl -L https://github.com/PoetOS/moodle-mod_questionnaire/archive/refs/heads/MOODLE_404_STABLE.zip -o questionnaire.zip \
     && unzip questionnaire.zip \
-    && chown -R www-data:www-data questionnaire \
-    && rm questionnaire.zip
+    && rm questionnaire.zip \
+    && mv moodle-mod_questionnaire-MOODLE_404_STABLE questionnaire \
+    && chown -R www-data:www-data questionnaire
 
-# Plugin MultiPartyMetting
-#COPY ./multipartymeeting/multipartymeeting.zip /var/www/html/mod/
-#RUN cd /var/www/html/mod/ \
-#    && unzip multipartymeeting.zip \
-#    && chown -R www-data:www-data multipartymeeting \
-#    && rm multipartymeeting.zip
+# Install texlive & AMC dependencies 
+RUN apt-get update \
+    && apt-get install -y \
+        git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install H5P - mod/hvp version 1.6 from https://moodle.org/plugins/mod_hvp
+
+# Install H5P - mod_hvp version 1.23.2 from https://moodle.org/plugins/mod_hvp
 RUN cd /var/www/html/mod \
-    && curl -L  https://moodle.org/plugins/download.php/24438/mod_hvp_moodle311_2021061100.zip -o mod_hvp.zip \
-    && unzip mod_hvp.zip \
-    && chown -R www-data:www-data hvp \
-    && rm mod_hvp.zip
+    && git clone --recursive https://github.com/h5p/moodle-mod_hvp hvp \
+    && chown -R www-data:www-data hvp
 
 # Copy file to auto install H5P libraries
-COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
-RUN cd /var/www/html/mod/hvp \
-    && chown www-data:www-data autoinstallhvplibs.php \
-    && chmod 775 autoinstallhvplibs.php
+######### TESTS: this 
+#COPY ./autoinstallhvplibs.php /var/www/html/mod/hvp/autoinstallhvplibs.php 
+#RUN cd /var/www/html/mod/hvp \
+#    && chown www-data:www-data autoinstallhvplibs.php \
+#    && chmod 775 autoinstallhvplibs.php
 
+### NON UTILISE
 # Install VPL - mod/vpl version 1.6 from https://moodle.org/plugins/mod_vpl
 #RUN cd /var/www/html/mod \
 #    #&& curl -L https://github.com/jcrodriguez-dis/moodle-mod_vpl/archive/bc98f46fcac852d1d237a5ed700fe4030b385aa9.zip -o mod_vpl.zip \
@@ -176,139 +152,109 @@ RUN cd /var/www/html/mod/hvp \
 #    && chown -R www-data:www-data vpl \
 #    && rm mod_vpl.zip
 
-# Install EJSapp pack - mod/ejsapp version 3.0 from https://moodle.org/plugins/mod_ejsapp
-RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/19100/mod_ejsapp_moodle36_2019030300.zip  -o mod_ejsapp.zip \
-    && unzip mod_ejsapp.zip \
-    && chown -R www-data:www-data ejsapp \
-    && rm mod_ejsapp.zip
+### OBSOLETE
+# # Install EJSapp pack - mod/ejsapp version 4.0 from https://moodle.org/plugins/mod_ejsapp
+# RUN cd /var/www/html/mod \
+#     && curl -L https://moodle.org/plugins/download.php/20650/mod_ejsapp_moodle38_2019112102.zip  -o mod_ejsapp.zip \
+#     && unzip mod_ejsapp.zip \
+#     && chown -R www-data:www-data ejsapp \
+#     && rm mod_ejsapp.zip
 
-# Install EJSapp repository - repository/osp version 3.0 from https://moodle.org/plugins/repository_osp
-RUN cd /var/www/html/repository \
-    && curl -L https://moodle.org/plugins/download.php/17745/repository_osp_moodle36_2017051500.zip -o repository_osp.zip \
-    && unzip repository_osp.zip \
-    && rm repository_osp.zip
+### OBSOLETE
+# # Install EJSapp repository - repository/osp version 1.3 from https://moodle.org/plugins/repository_osp
+# RUN cd /var/www/html/repository \
+#     && curl -L https://moodle.org/plugins/download.php/17745/repository_osp_moodle36_2017051500.zip -o repository_osp.zip \
+#     && unzip repository_osp.zip \
+#     && rm repository_osp.zip
 
-# Install EJSapp remote lab manager - block/remlab_manager version 3.0 from https://moodle.org/plugins/block_remlab_manager
-RUN cd /var/www/html/blocks \
-    && curl -L https://moodle.org/plugins/download.php/19101/block_remlab_manager_moodle36_2019030300.zip -o block_remlab_manager.zip \
-    && unzip block_remlab_manager.zip \
-    && rm block_remlab_manager.zip
+### OBSOLETE
+# Install EJSapp remote lab manager - block/remlab_manager version 1.2 from https://moodle.org/plugins/block_remlab_manager
+# RUN cd /var/www/html/blocks \
+#     && curl -L https://moodle.org/plugins/download.php/20651/block_remlab_manager_moodle38_2019111907.zip -o block_remlab_manager.zip \
+#     && unzip block_remlab_manager.zip \
+#     && rm block_remlab_manager.zip
 
-# Install Category_Enrol (block) - blocks/category_enrol version 0.1 from https://github.com/iucc/moodle-block_category_enrol
-RUN cd /var/www/html/blocks \
-    && curl -L https://github.com/iucc/moodle-block_category_enrol/archive/a6a7b2d7f9496ff2deb1a6aa8322a0f25ad4ee94.zip -o block_category_enrol.zip \
-    && unzip block_category_enrol.zip \
-    && mv moodle-block_category_enrol* category_enrol \
-    && rm block_category_enrol.zip
+## PAS D'INSTALLATION POUR L'INSTANT À CAUSE DU MARKETPLACE
+# Install Moosh 1.11 https://moodle.org/plugins/view.php?id=522
+# RUN wget https://moodle.org/plugins/download.php/29225/moosh_moodle42_2023051601.zip -O /moosh.zip \
+#     && unzip /moosh.zip \
+#     && rm /moosh.zip \
+#     && chmod a+x /moosh/moosh.php
 
-# Install Easy Enrollments - enrol/easy version 1.1 from https://moodle.org/plugins/enrol_easy
-RUN cd /var/www/html/enrol \
-    && curl -L https://moodle.org/plugins/download.php/23046/enrol_easy_moodle310_2020120700.zip -o enrol_easy.zip \
-    && unzip enrol_easy.zip \
-    && rm enrol_easy.zip
 
-# Install Plugin to use CERNBox as remote repository
-RUN cd /var/www/html/repository \
-    && wget https://moodle.org/plugins/download.php/18330/repository_owncloud_moodle36_2018112300.zip -O owncloud.zip \
-    && unzip owncloud.zip \
-    && rm owncloud.zip \
-    && chown -R www-data:www-data owncloud
-
-# Install DSpace Sword plugin (push metadata to Dspace)
-RUN cd /var/www/html/repository \
-    && wget https://github.com/up2university/sword_upload/archive/ce03bd0928ec7ecba46f058aa3660239d2ab777f.zip -O sword_upload.zip \
-    && unzip sword_upload.zip \
-    && rm sword_upload.zip \
-    && mv sword_upload* sword_upload \
-    && chown -R www-data:www-data sword_upload
-
-# Install DSpace API plugin (pull metadata from Dspace)
-RUN cd /var/www/html/repository \
-    && wget https://github.com/up2university/Moodle-Dspace-Plugin/archive/00389f06051ac9a152b36af6f3e0afbcaf8a34bc.zip -O Moodle-Dspace-Plugin.zip \
-    && unzip Moodle-Dspace-Plugin.zip \
-    && rm Moodle-Dspace-Plugin.zip \
-    && mv Moodle-Dspace-Plugin*/dspace dspace \
-    && rm -r Moodle-Dspace-Plugin* \
-    && chown -R www-data:www-data dspace
-
-# Install logstore_xapi plugin to send learning records to LRS
-# RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.2.5/xapi.zip -o /xapi.zip \
-RUN curl -L https://github.com/xAPI-vle/moodle-logstore_xapi/releases/download/v4.6.0/xapi.zip -o /xapi.zip \
-    && unzip /xapi.zip -d /var/www/html/admin/tool/log/store/ \
-    && rm /xapi.zip \
-    && chown -R www-data:www-data /var/www/html/admin/tool/log/store/xapi
-
-# Install Moodle stats - up2university/moodle_statistics from https://github.com/up2university/moodle_statistics 
-RUN cd /var/www/html/local \
-    && curl -L https://github.com/up2university/moodle_statistics/archive/34fcbb828abfcb9ce2b67a8b8979a4892b77ebe6.zip -o moodle_stat.zip \
-    && unzip moodle_stat.zip \
-    && mv moodle_statistics* statistics \
-    && rm moodle_stat.zip
-
-# Install Moosh
-RUN wget https://moodle.org/plugins/download.php/15063/moosh_moodle33_2017101600.zip -O /moosh.zip \
-    && unzip /moosh.zip \
-    && rm /moosh.zip \
-    && wget https://gist.githubusercontent.com/nadavkav/2e016eb5cdf5634f8d9a4ed02ed32ebb/raw/22ebd3615992bebfc9ca979955f92e0b4a7c0113/Moosh_Command_Moodle23_Config_ConfigGet.php -O /moosh/Moosh/Command/Moodle23/Config/ConfigGet.php \
-    && chmod a+x /moosh/moosh.php
-COPY icons/cernbox_icon.svg /var/www/html/repository/owncloud/pix/icon.svg
-COPY php.ini /etc/php/7.4/apache2/php.ini
+COPY php.ini /etc/php/8.3/apache2/php.ini
 COPY config/ /config
 COPY configure.sh /configure.sh
 RUN chmod a+x /configure.sh
 
-# Install Plugin XP (LevelUP!)
+
+# Install Plugin XP (LevelUP!) v20.1 https://moodle.org/plugins/block_xp
 RUN cd /var/www/html/blocks \
-    && curl -L https://moodle.org/plugins/download.php/24010/block_xp_moodle311_2021042802.zip -o block_xp.zip \
+    && curl -L https://github.com/FMCorz/moodle-block_xp/archive/refs/tags/v20.1.zip -o block_xp.zip \
     && unzip block_xp.zip \
     && rm block_xp.zip \
+    && mv moodle-block_xp-20.1 xp \
     && chown -R www-data:www-data xp
 
-# Install Plugin emailtest 1.4.0
+# Install Plugin emailtest 3.18 https://moodle.org/plugins/local_mailtest
 RUN cd /var/www/html/local \
-    && curl -L https://moodle.org/plugins/download.php/22516/local_mailtest_moodle311_2020092000.zip -o mailtest.zip \
+    && curl -L https://github.com/michael-milette/moodle-local_mailtest/archive/refs/tags/v3.1.8.zip -o mailtest.zip \
     && unzip mailtest.zip \
     && rm mailtest.zip \
+    && mv moodle-local_mailtest-3.1.8 mailtest \
     && chown -R www-data:www-data mailtest
 
-
-# Install Plugin BigBlueButtonBN
+# Install Plugin Scheduler 4.0.0 (2023052300) https://moodle.org/plugins/mod_scheduler
 RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/24391/mod_bigbluebuttonbn_moodle311_2019101009.zip -o bbb.zip \
-    && unzip bbb.zip \
-    && rm bbb.zip \
-    && chown -R www-data:www-data bigbluebuttonbn
-
-
-# Install Plugin Scheduler
-RUN cd /var/www/html/mod \
-    && curl -L https://moodle.org/plugins/download.php/20738/mod_scheduler_moodle39_2019120200.zip -o sched.zip \
+    && curl -L https://github.com/learnweb/moodle-mod_scheduler/archive/refs/tags/v5.2-r1.zip -o sched.zip \
     && unzip sched.zip \
     && rm sched.zip \
+    && mv moodle-mod_scheduler-5.2-r1 scheduler \
     && chown -R www-data:www-data scheduler
 
-
-# Install Plugin jazzquiz
+# Install Plugin jazzquiz 1.3.2 https://moodle.org/plugins/mod_jazzquiz
 RUN cd /var/www/html/mod \
-    && curl -L  https://moodle.org/plugins/download.php/23384/mod_jazzquiz_moodle310_2021020400.zip -o jazz.zip \
+    && curl -L https://github.com/KQMATH/moodle-mod_jazzquiz/archive/refs/tags/v1.3.2.zip -o jazz.zip \
     && unzip jazz.zip \
     && rm jazz.zip \
+    && mv moodle-mod_jazzquiz-1.3.2 jazzquiz \
     && chown -R www-data:www-data jazzquiz
 
-# Install Plugin CustomSQL
+# Install Plugin CustomSQL 4.4 https://moodle.org/plugins/report_customsql
 RUN cd /var/www/html/report \
-    && curl -L  https://moodle.org/plugins/download.php/23125/report_customsql_moodle310_2020121800.zip -o customsql.zip \
+    && curl -L https://github.com/moodleou/moodle-report_customsql/archive/refs/heads/main.zip -o customsql.zip \
     && unzip customsql.zip \
     && rm customsql.zip \
+    && mv moodle-report_customsql-main customsql \
     && chown -R www-data:www-data customsql
 
-# Install Plugin CourseSize
+# Install Plugin CourseSize 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
 RUN cd /var/www/html/report \
-    && curl -L https://moodle.org/plugins/download.php/19641/report_coursesize_moodle37_2019052800.zip -o coursesize.zip \
+    && curl -L https://github.com/catalyst/moodle-report_coursesize/archive/refs/heads/MOODLE_401_STABLE.zip -o coursesize.zip \
     && unzip coursesize.zip \
     && rm coursesize.zip \
+    && mv moodle-report_coursesize-MOODLE_401_STABLE coursesize \
     && chown -R www-data:www-data coursesize
+
+
+# Install Plugin OfflineQuiz 2024112602 (2025121001) https://moodle.org/plugins/report_coursesize
+RUN cd /var/www/html/mod \
+    && curl -L https://github.com/academic-moodle-cooperation/moodle-mod_offlinequiz/archive/refs/heads/MOODLE_405_STABLE.zip -o offlinequiz.zip \
+    && unzip offlinequiz.zip \
+    && rm offlinequiz.zip \
+    && mv moodle-mod_offlinequiz-MOODLE_405_STABLE offlinequiz \
+    && chown -R www-data:www-data offlinequiz
+
+# Overwrite OfflineQuiz files with our patched versions (combined question + answer form PDF).
+COPY --chown=www-data:www-data ./offlinequiz-patch/ /var/www/html/mod/offlinequiz/
+
+RUN mkdir -p /usr/local/share/texmf/tex/latex/atslmc
+COPY atslmc.sty /usr/local/share/texmf/tex/latex/atslmc/atslmc.sty
+RUN mktexlsr
+
+RUN apt-get remove -y git \
+    && apt-get autoremove -y \
+    && apt-get clean
 
 EXPOSE 80 443
 
