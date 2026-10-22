@@ -77,13 +77,23 @@ class offlinequiz_html_translator {
             $unique = str_replace('.', '', microtime(true) . '_' . rand(0, 100000));
 
             $imagetag = substr($string, 0, strpos($string, '>'));
-            $attributestrings = explode(' ', $imagetag);
+            // Extract attributes with a quote-aware regex rather than naively splitting on spaces: a base64-encoded
+            // image can be stored wrapped onto several lines (e.g. by an import/migration tool), so its "src"
+            // value may contain spaces and line breaks. Splitting on every space would otherwise chop that value
+            // into pieces and keep only the first few characters of the image data.
             $attributes = [];
-            foreach ($attributestrings as $attributestring) {
-                $valuepair = explode('=', $attributestring);
-                if (count($valuepair) > 1 && strlen(trim($valuepair[0])) > 0) {
-                    $attributes[strtolower(trim($valuepair[0]))] = str_replace('"', '', str_replace("'", '', $valuepair[1]));
+            preg_match_all('/([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|(\S+))/', $imagetag, $attrmatches,
+                    PREG_SET_ORDER);
+            foreach ($attrmatches as $attrmatch) {
+                $name = strtolower(trim($attrmatch[1]));
+                if (!empty($attrmatch[2])) {
+                    $value = $attrmatch[2];
+                } else if (!empty($attrmatch[3])) {
+                    $value = $attrmatch[3];
+                } else {
+                    $value = $attrmatch[4] ?? '';
                 }
+                $attributes[$name] = $value;
             }
 
             if (array_key_exists('width', $attributes) && $attributes['width'] > 0) {
