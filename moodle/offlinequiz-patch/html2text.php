@@ -156,7 +156,6 @@ class offlinequiz_html_translator {
                             $texexp = trim($texcache->rawtext); // The entities are now decoded before inserting to DB.
                             // Remove non breaking spaces.
                             $texexp = trim(str_replace(" ", "", $texexp));
-                            $texexp = 'f(x)=5x^2+\frac{6a}{c}';
                             $latexpath = $latex->render($texexp, $parts[1], 12, $density, $background);
                             if ($latexpath) {
                                 copy($latexpath, $teximagefile);
@@ -183,17 +182,21 @@ class offlinequiz_html_translator {
 
                 $factor = 2; // Per default show images half sized.
                 if (!$imageurl) {
-                    if (!file_exists($file)) {
+                    // Validate that the file actually exists and is a real, decodable image before doing
+                    // anything else with it. A missing file blob or a corrupt/incomplete image would otherwise
+                    // reach TCPDF as invalid image data later on, which crashes PDF generation entirely instead
+                    // of just that one image.
+                    $imageinfo = (file_exists($file)) ? @getimagesize($file) : false;
+                    if ($imageinfo === false) {
                         $output .= get_string('imagenotfound', 'offlinequiz', $file);
                     } else {
                         // Use imagemagick to remove alpha channel and reduce resolution of large images.
-                        $imageinfo = getimagesize($file);
                         $filewidth  = $imageinfo[0];
                         $fileheight = $imageinfo[1];
                         $pathconvert = $DB->get_field('config_plugins', 'value', ['plugin' => 'filter_tex',
                                           'name' => 'pathconvert']);
 
-                        if (file_exists($pathconvert)) {
+                        if (file_exists($pathconvert) && $filewidth > 0 && $fileheight > 0) {
                             $newfile = $CFG->tempdir . "/offlinequiz/" . $unique . '_c.png';
                             $resize = '';
                             $percent = round(200000000 / ($filewidth * $fileheight));
@@ -204,11 +207,15 @@ class offlinequiz_html_translator {
                                     $newfile, 'r');
                             pclose($handle);
                             $this->tempfiles[] = $file;
-                            $file = $newfile;
-                            if ($percent < 100) {
-                                $imageinfo = getimagesize($file);
-                                $filewidth  = $imageinfo[0];
-                                $fileheight = $imageinfo[1];
+                            // Only switch to the converted file if imagemagick actually produced a valid image;
+                            // otherwise keep using the original (unconverted) file.
+                            if (@getimagesize($newfile) !== false) {
+                                $file = $newfile;
+                                if ($percent < 100) {
+                                    $imageinfo = getimagesize($file);
+                                    $filewidth  = $imageinfo[0];
+                                    $fileheight = $imageinfo[1];
+                                }
                             }
                         }
 
